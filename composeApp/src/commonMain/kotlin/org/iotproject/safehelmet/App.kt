@@ -16,8 +16,8 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun App(
-    onConnectClick: () -> Unit,
-    onSendToArduinoClick: () -> Unit
+//    onConnectClick: () -> Unit,
+//    onSendToArduinoClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -49,3 +49,7 @@ fun App(
         }
     }
 }
+
+// Callback functions
+val onConnectClick: () -> Unit = {}
+val onSendToArduinoClick: () -> Unit = {}
