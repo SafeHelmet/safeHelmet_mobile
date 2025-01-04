@@ -27,7 +27,7 @@ fun App() {
                 .fillMaxWidth(0.9f)
         ) {
             Button(
-                onClick = onConnectClick(),
+                onClick = { onConnectClick() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -36,7 +36,7 @@ fun App() {
                 Text(name())
             }
             Button(
-                onClick = onSendToArduinoClick(),
+                onClick = { onSendToArduinoClick() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
