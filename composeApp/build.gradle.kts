@@ -36,7 +36,7 @@ kotlin {
         commonMain.dependencies {
 
             implementation(libs.blue.falcon)
-
+            implementation(libs.androidx.activity.ktx)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
