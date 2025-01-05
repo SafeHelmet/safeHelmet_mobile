@@ -6,6 +6,8 @@ import dev.bluefalcon.BluetoothPeripheral
 import dev.bluefalcon.ServiceFilter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import android.util.Log
+import kotlinx.coroutines.flow.forEach
 
 class BluetoothService(application: Application) {
     private val blueFalcon = BlueFalcon(log = null, application)
@@ -14,8 +16,10 @@ class BluetoothService(application: Application) {
     val peripherals: StateFlow<List<BluetoothPeripheral>> = _peripherals
 
     fun startScanning() {
-        val filter: ServiceFilter? = null
-        blueFalcon.scan(filter)
+        blueFalcon.scan()
+        blueFalcon.peripherals.collect { peripheral ->
+            Log.d("PERI", "Dispositivo trovato: ${peripheral ?: "Sconosciuto"}")
+        }
     }
 
     fun stopScanning() {

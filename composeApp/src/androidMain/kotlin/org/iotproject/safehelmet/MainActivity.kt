@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import android.util.Log
 
 class MainActivity : ComponentActivity() {
     private lateinit var bluetoothService: BluetoothService
