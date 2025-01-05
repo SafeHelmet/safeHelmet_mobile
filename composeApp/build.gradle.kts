@@ -34,6 +34,9 @@ kotlin {
             implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
+
+            implementation(libs.blue.falcon)
+
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
