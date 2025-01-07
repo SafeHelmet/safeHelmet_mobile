@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val devices by bluetoothService.peripherals.collectAsState(initial = emptyList())
+            val devices by bluetoothService.peripherals.collectAsState()
 
             BluetoothScreen(
                 devices = devices.map { it.name ?: "Unknown Device" },
