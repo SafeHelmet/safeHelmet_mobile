@@ -2,4 +2,6 @@ package org.iotproject.safehelmet
 
 import androidx.compose.ui.window.ComposeUIViewController
 
-fun MainViewController() = ComposeUIViewController { App() }
+// TODO al posto di App ci va BluetoothScreenWrapper
+//fun MainViewController() = ComposeUIViewController { App() }
+//fun MainViewController() = ComposeUIViewController { BluetoothScreenWrapper() }
