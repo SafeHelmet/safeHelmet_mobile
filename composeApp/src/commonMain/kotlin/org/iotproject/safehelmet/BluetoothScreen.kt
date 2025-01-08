@@ -1,5 +1,6 @@
 package org.iotproject.safehelmet
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,7 +15,9 @@ import androidx.compose.ui.unit.dp
 fun BluetoothScreen(
     devices: List<String>,
     onStartScanning: () -> Unit,
-    onStopScanning: () -> Unit
+    onStopScanning: () -> Unit,
+    onDeviceSelected: (String) -> Unit,
+    onLedCommand: (String) -> Unit // Callback per inviare il comando LED
 ) {
     Column(
         modifier = Modifier
@@ -43,8 +46,25 @@ fun BluetoothScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)
+                        .clickable {
+                            onDeviceSelected(device)
+                        }
                 )
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Pulsante per accendere il LED
+        Button(onClick = { onLedCommand("ON") }) {
+            Text("Accendi LED")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Pulsante per spegnere il LED
+        Button(onClick = { onLedCommand("OFF") }) {
+            Text("Spegni LED")
         }
     }
 }
