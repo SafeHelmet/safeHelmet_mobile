@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 
 @Composable
-fun BluetoothScreenWrapper(bluetoothService: BluetoothService) {
+fun BluetoothScreenWrapper(bluetoothService: BLEManager) {
     val devices = bluetoothService.peripherals.collectAsState().value.mapNotNull { it.name }
 
     BluetoothScreen(
