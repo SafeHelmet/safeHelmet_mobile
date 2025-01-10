@@ -6,5 +6,5 @@ import dev.bluefalcon.ApplicationContext
 // TODO al posto di App ci va BluetoothScreenWrapper
 
 fun MainViewController() = ComposeUIViewController { BluetoothScreenWrapper(BluetoothService(
-    ApplicationContext()
+    ApplicationContext.sharedApplication()
 )) }
