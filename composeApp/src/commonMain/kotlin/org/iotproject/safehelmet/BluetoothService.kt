@@ -5,6 +5,8 @@ import dev.bluefalcon.ApplicationContext
 import dev.bluefalcon.BlueFalcon
 import dev.bluefalcon.BluetoothPeripheral
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlin.uuid.ExperimentalUuidApi
+
 
 class BluetoothService(context: ApplicationContext) {
 
@@ -34,11 +36,15 @@ class BluetoothService(context: ApplicationContext) {
 
 
     fun sendLedCommand(command: String) {
+        // TODO f47ac10b-58cc-4372-a567-0e02b2c3d479 is a random value for testing only
+
         connectedPeripheral?.let { peripheral ->
             val ledCharacteristic =
 //                TODO MUX guarda qua, non riesco a trovare la characteristics dell'arduino
 //                 Dovrebbero essere le impostazioni che fai all'inizio dello script ma non le vede
-                peripheral.characteristics["f47ac10b58cc4372a5670e02b2c3d479"]
+
+                @OptIn(ExperimentalUuidApi::class) // This annotation makes the function aware of the experimental API
+                peripheral.characteristics[createUuidFromString("f47ac10b-58cc-4372-a567-0e02b2c3d479")]
 
             if (ledCharacteristic == null) {
                 Logger.e(tag = "Bluetooth", messageString = "Caratteristica non trovata")
