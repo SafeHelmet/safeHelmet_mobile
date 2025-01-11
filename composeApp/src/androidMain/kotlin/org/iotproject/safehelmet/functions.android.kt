@@ -6,5 +6,5 @@ import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
 actual fun createUuidFromString(uuidString: String): Uuid {
-    return kUuid.fromByteArray(uuidString.toByteArray())
+    return kUuid.parse(uuidString)
 }
