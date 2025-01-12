@@ -36,13 +36,13 @@ kotlin {
     }
     
     sourceSets {
-        
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.androidx.activity.ktx)
+            implementation(libs.androidx.lifecycle.runtime.ktx)
         }
         commonMain.dependencies {
             implementation(libs.kermit)
@@ -84,6 +84,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.material3.android)
     debugImplementation(compose.uiTooling)
 }
 

@@ -1,7 +1,7 @@
 package org.iotproject.ble
 
 // BluetoothManager.kt
-actual class BluetoothManager {
+actual class BleManager {
     actual fun initializeBluetooth() {
     }
 

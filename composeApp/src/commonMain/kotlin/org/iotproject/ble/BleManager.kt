@@ -1,7 +1,7 @@
 package org.iotproject.ble
 
 // BluetoothManager.kt
-expect class BluetoothManager {
+expect class BleManager {
     fun initializeBluetooth()
     fun startScanning()
     fun stopScanning()
