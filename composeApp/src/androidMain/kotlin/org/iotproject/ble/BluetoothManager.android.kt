@@ -3,6 +3,7 @@ package org.iotproject.ble
 import android.Manifest
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -13,13 +14,14 @@ import androidx.core.content.ContextCompat
 
 actual class BleManager(private val context: Context) {
 
-    private val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
-
+    private val bluetoothAdapter: BluetoothAdapter =
+        (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
 
     private var enableBluetoothLauncher: ActivityResultLauncher<Intent>? = null
     private var permissionsLauncher: ActivityResultLauncher<Array<String>>? = null
     private var activity: Activity? = null
 
+    var peripherals = mutableMapOf<String, PeripheralDevice>()
 
     // Inizializza il BluetoothManager con l'Activity e i launchers
     fun initializeBluetoothManager(
@@ -98,7 +100,7 @@ actual class BleManager(private val context: Context) {
                     Log.e("BluetoothManager", "Mancano i permessi")
                     return
                 }
-
+                peripherals[device.address] = PeripheralDevice()
                 Log.d("BluetoothManager", "Dispositivo trovato: ${device.name} - ${device.address}")
             }
         }
