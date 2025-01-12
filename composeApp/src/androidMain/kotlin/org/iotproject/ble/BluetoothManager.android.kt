@@ -77,11 +77,9 @@ actual class BleManager(private val context: Context) {
 
     // Metodo per richiedere i permessi
     fun requestPermissions(
-        activity: Activity,
-        launcher: androidx.activity.result.ActivityResultLauncher<Array<String>>
     ) {
         if (!hasPermissions()) {
-            launcher.launch(bluetoothPermissions)
+            permissionsLauncher?.launch(bluetoothPermissions)
         } else {
             Log.i("BluetoothManager", "Permessi già concessi")
         }

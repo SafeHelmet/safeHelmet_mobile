@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
         if(bleManager.hasPermissions()){
             bleManager.initializeBluetooth()
         }else{
-            bleManager.requestPermissions(this, permissionsLauncher)
+            bleManager.requestPermissions()
             bleManager.initializeBluetooth()
         }
 
