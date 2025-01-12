@@ -9,6 +9,14 @@ plugins {
 }
 
 kotlin {
+
+
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
+
+
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
@@ -38,7 +46,6 @@ kotlin {
         }
         commonMain.dependencies {
             implementation(libs.kermit)
-            implementation(libs.blue.falcon)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
