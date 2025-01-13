@@ -4,14 +4,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import org.iotproject.ble.BleManager
 import org.iotproject.ble.BleDevice
-import org.iotproject.ble.BleService
 
 enum class ConnectionState {
     NON_CONNECTED,
@@ -23,17 +25,11 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
 
     var connectionState by remember { mutableStateOf(ConnectionState.NON_CONNECTED) }
     val devices = remember { mutableStateListOf<BleDevice>() }
-    val services = remember { mutableStateListOf<BleService>() }
 
     // Imposta la callback di BleManager
     bleManager.onDevicesFound = { foundDevices: Set<BleDevice> ->
         devices.clear()
         devices.addAll(foundDevices)
-    }
-
-    bleManager.onServicesDiscovered = { discoveredservice: Set<BleService> ->
-        services.clear()
-        services.addAll(discoveredservice)
     }
 
     when (connectionState) {
@@ -44,7 +40,6 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
         )
         ConnectionState.CONNECTED -> ConnectedScreen(
             bleManager = bleManager,
-            services= services,
             onDisconnectButtonClick = { connectionState = ConnectionState.NON_CONNECTED }
         )
     }
@@ -99,9 +94,11 @@ fun NonConnectedScreen(
 @Composable
 fun ConnectedScreen(
     bleManager: BleManager,
-    services: List<BleService>,
     onDisconnectButtonClick: () -> Unit
 ) {
+
+    var ledValue: MutableState<String?> = mutableStateOf(null)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -118,11 +115,6 @@ fun ConnectedScreen(
             Text("Disconnetti", fontSize = 18.sp)
         }
         Button(
-            onClick = { bleManager.discoverServices() }
-        ){
-            Text("Discover Services")
-        }
-        Button(
             onClick = { bleManager.writeCharacteristic("f47ac10b-58cc-4372-a567-0e02b2c3d480", "ON") }
         ){
             Text("Accendi led")
@@ -130,12 +122,42 @@ fun ConnectedScreen(
         Button(
             onClick = { bleManager.writeCharacteristic("f47ac10b-58cc-4372-a567-0e02b2c3d480", "OFF") }
         ){
-            Text("Spegni")
+            Text("Spegni led")
         }
-    }
-    LazyColumn {
-        items(services){
-            Text(it.uuid)
+        val scaffoldState = rememberScaffoldState() // Stato dello Scaffold
+        val scope = rememberCoroutineScope()
+
+        Scaffold(scaffoldState = scaffoldState) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Button(
+                    onClick = {
+                        bleManager.readCharacteristic("f47ac10b-58cc-4372-a567-0e02b2c3d481") { value ->
+                            // Gestisci il valore restituito nel callback
+                            if (value != null) {
+                                // Mostra il valore letto
+                                scope.launch {
+                                    scaffoldState.snackbarHostState.showSnackbar(
+                                        message = value,
+                                        actionLabel = "OK"
+                                    )
+                                }
+                            } else {
+                                // In caso di errore
+                                scope.launch {
+                                    scaffoldState.snackbarHostState.showSnackbar(
+                                        message = "Errore durante la lettura.",
+                                        actionLabel = "OK"
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    modifier = Modifier.padding(vertical = 8.dp)
+                ) {
+                    Text("Leggi stato")
+                }
+
+            }
         }
     }
 }

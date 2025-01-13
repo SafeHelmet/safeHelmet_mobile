@@ -5,6 +5,7 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
@@ -14,15 +15,12 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothStatusCodes
 
 actual class BleManager(private val context: Context) {
     private val scannedDevices : MutableSet<BleDevice> = mutableSetOf()
-    private val myservices : MutableList<BluetoothGattService> = mutableListOf()
 
     actual var onDevicesFound: ((Set<BleDevice>) -> Unit)? = null
-    actual var onServicesDiscovered: ((Set<BleService>) -> Unit)? = null
 
     private val bluetoothAdapter: BluetoothAdapter =
         (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
@@ -188,7 +186,7 @@ actual class BleManager(private val context: Context) {
         Log.i("BluetoothManager", "Connessione al dispositivo: ${device.name} - ${device.address}")
 
         // Usa il metodo connectGatt per stabilire la connessione
-        val bluetoothGatt = device.connectGatt(context, false, object : android.bluetooth.BluetoothGattCallback() {
+        val bluetoothGatt = device.connectGatt(context, false, object : BluetoothGattCallback() {
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
                 super.onConnectionStateChange(gatt, status, newState)
                 when (newState) {
@@ -213,15 +211,20 @@ actual class BleManager(private val context: Context) {
                 super.onServicesDiscovered(gatt, status)
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     Log.i("BluetoothManager", "Servizi scoperti per ${gatt.device.address}")
-                    myservices.addAll(gatt.services)
-                    val bleservices: MutableSet<BleService> = mutableSetOf()
-                    myservices.forEach { service ->
-                        bleservices.add(BleService(service.uuid.toString()))
-                    }
-                    onServicesDiscovered?.invoke(bleservices)
                 } else {
                     Log.e("BluetoothManager", "Errore nella scoperta dei servizi: $status")
                 }
+            }
+
+            override fun onCharacteristicRead(
+                gatt: BluetoothGatt,
+                characteristic: BluetoothGattCharacteristic,
+                value: ByteArray,
+                status: Int
+            ) {
+                super.onCharacteristicRead(gatt, characteristic, value, status)
+                Log.i("BluetoothManager", "Caratteristica letta: ${characteristic.uuid}")
+                Log.i("BluetoothManager", "Valore letto: ${String(value)}")
             }
         })
 
@@ -272,11 +275,11 @@ actual class BleManager(private val context: Context) {
         }
     }
 
-
-    actual fun readCharacteristic(characteristicUUID: String): String? {
+    actual fun readCharacteristic(characteristicUUID: String, onResult: (String?) -> Unit) {
         if (GYAAAT == null) {
             Log.e("BluetoothManager", "Nessuna connessione attiva per leggere la caratteristica.")
-            return null
+            onResult(null)
+            return
         }
 
         val characteristic = GYAAAT!!.services
@@ -285,25 +288,29 @@ actual class BleManager(private val context: Context) {
 
         if (characteristic == null) {
             Log.e("BluetoothManager", "Caratteristica non trovata: $characteristicUUID")
-            return null
+            onResult(null)
+            return
         }
 
-        val success = if (ActivityCompat.checkSelfPermission(
+        // Controllo dei permessi
+        if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.BLUETOOTH_CONNECT
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            null
-        }else{
-            GYAAAT!!.readCharacteristic(characteristic)
+            Log.e("BluetoothManager", "Permesso BLUETOOTH_CONNECT non concesso.")
+            onResult(null)
+            return
         }
 
-        return if (success == true) {
+        // Avvia la lettura asincrona, passando il callback per ricevere il risultato
+        val success = GYAAAT!!.readCharacteristic(characteristic)
+
+        if (success) {
             Log.i("BluetoothManager", "Lettura della caratteristica avviata: $characteristicUUID")
-            null // Puoi ritornare il valore letto in un callback separato.
         } else {
             Log.e("BluetoothManager", "Errore durante la lettura della caratteristica: $characteristicUUID")
-            null
+            onResult(null)
         }
     }
 

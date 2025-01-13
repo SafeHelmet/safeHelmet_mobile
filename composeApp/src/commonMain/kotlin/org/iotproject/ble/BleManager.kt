@@ -3,7 +3,6 @@ package org.iotproject.ble
 // BluetoothManager.kt
 expect class BleManager {
     var onDevicesFound: ((Set<BleDevice>) -> Unit)?
-    var onServicesDiscovered: ((Set<BleService>) -> Unit)?
 
     fun initializeBluetooth()
     fun startScanning()
@@ -13,6 +12,6 @@ expect class BleManager {
     fun disconnectFromPeripheral()
 
     fun discoverServices()
-    fun readCharacteristic(characteristicUUID: String): String?
+    fun readCharacteristic(characteristicUUID: String, onResult: (String?) -> Unit)
     fun writeCharacteristic(characteristicUUID: String, value: String)
 }
