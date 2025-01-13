@@ -14,14 +14,15 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothStatusCodes
 
 actual class BleManager(private val context: Context) {
+    private val scannedDevices : MutableSet<BleDevice> = mutableSetOf()
+    private val myservices : MutableList<BluetoothGattService> = mutableListOf()
 
-    // Lista dei dispositivi BLE trovati
-    private val scannedDevices = mutableListOf<BleDevice>()
-    // Callback per notificare i dispositivi trovati
-    actual var onDevicesFound: ((List<BleDevice>) -> Unit)? = null
+    actual var onDevicesFound: ((Set<BleDevice>) -> Unit)? = null
+    actual var onServicesDiscovered: ((Set<BleService>) -> Unit)? = null
 
     private val bluetoothAdapter: BluetoothAdapter =
         (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
@@ -107,6 +108,7 @@ actual class BleManager(private val context: Context) {
                     return
                 }
                 peripherals[device.address] = device
+                scannedDevices.add(BleDevice(device.name, device.address))
                 onDevicesFound?.invoke(scannedDevices)
                 Log.d("BluetoothManager", "Dispositivo trovato: ${device.name} - ${device.address}")
             }
@@ -168,6 +170,7 @@ actual class BleManager(private val context: Context) {
     }
 
     actual fun connectToPeripheral(uuid: String) {
+        stopScanning()
         val device = peripherals[uuid]
         if (device == null){
             Log.e("BluetoothManager", "Dispositivo non trovato")
@@ -210,6 +213,12 @@ actual class BleManager(private val context: Context) {
                 super.onServicesDiscovered(gatt, status)
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     Log.i("BluetoothManager", "Servizi scoperti per ${gatt.device.address}")
+                    myservices.addAll(gatt.services)
+                    val bleservices: MutableSet<BleService> = mutableSetOf()
+                    myservices.forEach { service ->
+                        bleservices.add(BleService(service.uuid.toString()))
+                    }
+                    onServicesDiscovered?.invoke(bleservices)
                 } else {
                     Log.e("BluetoothManager", "Errore nella scoperta dei servizi: $status")
                 }

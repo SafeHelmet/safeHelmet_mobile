@@ -11,18 +11,51 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.iotproject.ble.BleManager
 import org.iotproject.ble.BleDevice
+import org.iotproject.ble.BleService
+
+enum class ConnectionState {
+    NON_CONNECTED,
+    CONNECTED
+}
 
 @Composable
-    fun BluetoothScreenWrapper(bleManager: BleManager) {
+fun BluetoothScreenWrapper(bleManager: BleManager) {
 
+    var connectionState by remember { mutableStateOf(ConnectionState.NON_CONNECTED) }
     val devices = remember { mutableStateListOf<BleDevice>() }
+    val services = remember { mutableStateListOf<BleService>() }
 
     // Imposta la callback di BleManager
-    bleManager.onDevicesFound = { foundDevices: List<BleDevice> ->
+    bleManager.onDevicesFound = { foundDevices: Set<BleDevice> ->
         devices.clear()
         devices.addAll(foundDevices)
     }
 
+    bleManager.onServicesDiscovered = { discoveredservice: Set<BleService> ->
+        services.clear()
+        services.addAll(discoveredservice)
+    }
+
+    when (connectionState) {
+        ConnectionState.NON_CONNECTED -> NonConnectedScreen(
+            devices = devices,
+            bleManager = bleManager,
+            onConnectButtonClick = { connectionState = ConnectionState.CONNECTED }
+        )
+        ConnectionState.CONNECTED -> ConnectedScreen(
+            bleManager = bleManager,
+            services= services,
+            onDisconnectButtonClick = { connectionState = ConnectionState.NON_CONNECTED }
+        )
+    }
+}
+
+@Composable
+fun NonConnectedScreen(
+    devices: List<BleDevice>,
+    bleManager: BleManager,
+    onConnectButtonClick: () -> Unit
+) {
     Column(modifier = Modifier.padding(16.dp)) {
         // Buttons for starting and stopping scanning
         Button(
@@ -51,11 +84,65 @@ import org.iotproject.ble.BleDevice
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
             items(devices) { device ->
-                DeviceItem(device = device, onConnect = { bleManager.connectToPeripheral(device.address) })
+                DeviceItem(
+                    device = device,
+                    onConnect = {
+                        bleManager.connectToPeripheral(device.address)
+                        onConnectButtonClick()
+                    }
+                )
             }
         }
     }
 }
+
+@Composable
+fun ConnectedScreen(
+    bleManager: BleManager,
+    services: List<BleService>,
+    onDisconnectButtonClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text("Sei connesso al dispositivo!", fontSize = 24.sp, modifier = Modifier.padding(bottom = 16.dp))
+        Button(
+            onClick = {onDisconnectButtonClick(); bleManager.disconnectFromPeripheral()},
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+        ) {
+            Text("Disconnetti", fontSize = 18.sp)
+        }
+        Button(
+            onClick = { bleManager.discoverServices() }
+        ){
+            Text("Discover Services")
+        }
+        Button(
+            onClick = { bleManager.writeCharacteristic("f47ac10b-58cc-4372-a567-0e02b2c3d480", "ON") }
+        ){
+            Text("Accendi led")
+        }
+        Button(
+            onClick = { bleManager.writeCharacteristic("f47ac10b-58cc-4372-a567-0e02b2c3d480", "OFF") }
+        ){
+            Text("Spegni")
+        }
+    }
+    LazyColumn {
+        items(services){
+            Text(it.uuid)
+        }
+    }
+}
+
+
+
+
 
 @Composable
 fun DeviceItem(device: BleDevice, onConnect: () -> Unit) {

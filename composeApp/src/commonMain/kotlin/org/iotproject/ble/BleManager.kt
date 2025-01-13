@@ -2,7 +2,8 @@ package org.iotproject.ble
 
 // BluetoothManager.kt
 expect class BleManager {
-    var onDevicesFound: ((List<BleDevice>) -> Unit)?
+    var onDevicesFound: ((Set<BleDevice>) -> Unit)?
+    var onServicesDiscovered: ((Set<BleService>) -> Unit)?
 
     fun initializeBluetooth()
     fun startScanning()

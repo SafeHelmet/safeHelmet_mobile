@@ -2,7 +2,11 @@ package org.iotproject.ble
 
 // BluetoothManager.kt
 actual class BleManager {
-    actual var onDevicesFound: ((List<BleDevice>) -> Unit)?
+    actual var onDevicesFound: ((Set<BleDevice>) -> Unit)?
+        get() = TODO("Not yet implemented")
+        set(value) {}
+
+    actual var onServicesDiscovered: ((Set<BleService>) -> Unit)?
         get() = TODO("Not yet implemented")
         set(value) {}
 
