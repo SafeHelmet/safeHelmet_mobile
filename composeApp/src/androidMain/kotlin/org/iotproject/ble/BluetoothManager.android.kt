@@ -215,7 +215,7 @@ actual class BleManager(private val context: Context) {
                 super.onServicesDiscovered(gatt, status)
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     Log.i("BluetoothManager", "Servizi scoperti per ${gatt.device.address}")
-                    val sburolo = gatt.getService(fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479")).getCharacteristic(fromString("f47ac10b-58cc-4372-a567-0e02b2c3d481"))
+                    val notifyCharacteristic = gatt.getService(fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479")).getCharacteristic(fromString("f47ac10b-58cc-4372-a567-0e02b2c3d481"))
                     if (ActivityCompat.checkSelfPermission(
                             context,
                             Manifest.permission.BLUETOOTH_CONNECT
@@ -223,20 +223,18 @@ actual class BleManager(private val context: Context) {
                     ) {
                         return
                     }
-                    if (gatt.setCharacteristicNotification(sburolo, true)){
+                    if (gatt.setCharacteristicNotification(notifyCharacteristic, true)){
                         Log.i("BluetoothManager", "Notifica attivata per la caratteristica")
                     }else{
                         Log.e("BluetoothManager", "Errore nella configurazione della notifica")
                     }
 
-                    val descriptor = sburolo.getDescriptor(fromString("f47ac10b-58cc-4372-a567-0e02b2c3d482"))
-
-                    val zzz = gatt.writeDescriptor(descriptor, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
-//                    if (zzz){
-//                        Log.i("BluetoothManager", "Descrizione attivata")
-//                    }else{
-//                        Log.e("BluetoothManager", "Errore nella configurazione della descrizione")
-//                    }
+                    val descriptor0 = notifyCharacteristic.descriptors[0]
+                    if (gatt.writeDescriptor(descriptor0, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) == BluetoothStatusCodes.SUCCESS){
+                        Log.i("BluetoothManager", "Descrizione attivata")
+                    }else{
+                        Log.e("BluetoothManager", "Errore nella configurazione della descrizione")
+                    }
 
                 } else {
                     Log.e("BluetoothManager", "Errore nella scoperta dei servizi: $status")
@@ -262,7 +260,6 @@ actual class BleManager(private val context: Context) {
                 value: ByteArray
             ) {
                 super.onCharacteristicChanged(gatt, characteristic, value)
-//                val newString = String(value, StandardCharsets.UTF_8)
                 Log.i("BluetoothManager", "Caratteristica cambiata: ${String(value)}")
             }
 
