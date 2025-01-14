@@ -16,6 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothStatusCodes
+import java.nio.charset.StandardCharsets
 
 actual class BleManager(private val context: Context) {
     private val scannedDevices : MutableSet<BleDevice> = mutableSetOf()
@@ -223,9 +224,13 @@ actual class BleManager(private val context: Context) {
                 status: Int
             ) {
                 super.onCharacteristicRead(gatt, characteristic, value, status)
-                Log.i("BluetoothManager", "Caratteristica letta: ${characteristic.uuid}")
-                Log.i("BluetoothManager", "Valore letto: ${String(value)}")
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    val newString = String(value, StandardCharsets.UTF_8)
+                    Log.i("BluetoothManager", "Caratteristica letta: ${newString}")
+                }
             }
+
+
         })
 
         // Salva il riferimento al BluetoothGatt nell'oggetto PeripheralDevice

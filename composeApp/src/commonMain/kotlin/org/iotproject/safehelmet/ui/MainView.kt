@@ -131,7 +131,7 @@ fun ConnectedScreen(
             Column(modifier = Modifier.padding(16.dp)) {
                 Button(
                     onClick = {
-                        bleManager.readCharacteristic("f47ac10b-58cc-4372-a567-0e02b2c3d481") { value ->
+                        bleManager.readCharacteristic("f47ac10b-58cc-4372-a567-0e02b2c3d480") { value ->
                             // Gestisci il valore restituito nel callback
                             if (value != null) {
                                 // Mostra il valore letto
