@@ -97,8 +97,6 @@ fun ConnectedScreen(
     onDisconnectButtonClick: () -> Unit
 ) {
 
-    var ledValue: MutableState<String?> = mutableStateOf(null)
-
     Column(
         modifier = Modifier
             .fillMaxSize()
