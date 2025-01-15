@@ -4,14 +4,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 import org.iotproject.ble.BleManager
 import org.iotproject.ble.BleDevice
 
@@ -38,6 +35,7 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
             bleManager = bleManager,
             onConnectButtonClick = { connectionState = ConnectionState.CONNECTED }
         )
+
         ConnectionState.CONNECTED -> ConnectedScreen(
             bleManager = bleManager,
             onDisconnectButtonClick = { connectionState = ConnectionState.NON_CONNECTED }
@@ -103,9 +101,13 @@ fun ConnectedScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Sei connesso al dispositivo!", fontSize = 24.sp, modifier = Modifier.padding(bottom = 16.dp))
+        Text(
+            "Sei connesso al dispositivo!",
+            fontSize = 24.sp,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
         Button(
-            onClick = {onDisconnectButtonClick(); bleManager.disconnectFromPeripheral()},
+            onClick = { onDisconnectButtonClick(); bleManager.disconnectFromPeripheral() },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp)
@@ -113,55 +115,40 @@ fun ConnectedScreen(
             Text("Disconnetti", fontSize = 18.sp)
         }
         Button(
-            onClick = { bleManager.writeCharacteristic("f47ac10b-58cc-4372-a567-0e02b2c3d480", "ON") }
-        ){
+            onClick = {
+                bleManager.writeCharacteristic(
+                    "f47ac10b-58cc-4372-a567-0e02b2c3d480",
+                    "ON"
+                )
+            }
+        ) {
             Text("Accendi led")
         }
         Button(
-            onClick = { bleManager.writeCharacteristic("f47ac10b-58cc-4372-a567-0e02b2c3d480", "OFF") }
-        ){
+            onClick = {
+                bleManager.writeCharacteristic(
+                    "f47ac10b-58cc-4372-a567-0e02b2c3d480",
+                    "OFF"
+                )
+            }
+        ) {
             Text("Spegni led")
         }
-        val scaffoldState = rememberScaffoldState() // Stato dello Scaffold
-        val scope = rememberCoroutineScope()
 
-        Scaffold(scaffoldState = scaffoldState) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Button(
-                    onClick = {
-                        bleManager.readCharacteristic("f47ac10b-58cc-4372-a567-0e02b2c3d480") { value ->
-                            // Gestisci il valore restituito nel callback
-                            if (value != null) {
-                                // Mostra il valore letto
-                                scope.launch {
-                                    scaffoldState.snackbarHostState.showSnackbar(
-                                        message = value,
-                                        actionLabel = "OK"
-                                    )
-                                }
-                            } else {
-                                // In caso di errore
-                                scope.launch {
-                                    scaffoldState.snackbarHostState.showSnackbar(
-                                        message = "Errore durante la lettura.",
-                                        actionLabel = "OK"
-                                    )
-                                }
-                            }
-                        }
-                    },
-                    modifier = Modifier.padding(vertical = 8.dp)
-                ) {
-                    Text("Leggi stato")
-                }
-
+        Column(modifier = Modifier.padding(16.dp)) {
+            Button(
+                onClick = {
+                    bleManager.readCharacteristic("f47ac10b-58cc-4372-a567-0e02b2c3d480")
+                },
+                modifier = Modifier.padding(vertical = 8.dp)
+            ) {
+                Text("Leggi stato")
             }
+
+
         }
     }
 }
-
-
-
 
 
 @Composable

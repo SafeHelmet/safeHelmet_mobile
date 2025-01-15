@@ -26,11 +26,7 @@ actual class BleManager {
         TODO("Ios implementation")
     }
 
-    actual fun discoverServices() {
-        TODO("Ios implementation")
-    }
-
-    actual fun readCharacteristic(characteristicUUID: String, onResult: (String?) -> Unit){
+    actual fun readCharacteristic(characteristicUUID: String){
         TODO("Not yet implemented")
     }
 

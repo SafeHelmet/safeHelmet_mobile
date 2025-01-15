@@ -11,7 +11,6 @@ expect class BleManager {
     fun connectToPeripheral(uuid: String)
     fun disconnectFromPeripheral()
 
-    fun discoverServices()
-    fun readCharacteristic(characteristicUUID: String, onResult: (String?) -> Unit)
+    fun readCharacteristic(characteristicUUID: String)
     fun writeCharacteristic(characteristicUUID: String, value: String)
 }
