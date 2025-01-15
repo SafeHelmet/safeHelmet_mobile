@@ -1,70 +1,51 @@
 package org.iotproject.safehelmet
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.widget.Toast
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
+import org.iotproject.ble.BleManager
+import org.iotproject.safehelmet.ui.BluetoothScreenWrapper
 
 class MainActivity : ComponentActivity() {
-    private lateinit var bluetoothService: BluetoothService
+    private lateinit var bleManager: BleManager
 
-    // Permessi richiesti
-    private val bluetoothPermissions = arrayOf(
-        Manifest.permission.BLUETOOTH_SCAN,
-        Manifest.permission.BLUETOOTH_CONNECT,
-        Manifest.permission.ACCESS_FINE_LOCATION
-    )
-
-    // ActivityResultLauncher per i permessi
-    private val requestPermissionsLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            if (permissions.all { it.value }) {
-                // Permessi concessi, avvia la scansione
-                startBluetoothScanning()
-            } else {
-                // Mostra un messaggio di errore se i permessi sono negati
-                Toast.makeText(this, "Bluetooth permissions are required for this app to work", Toast.LENGTH_SHORT).show()
-            }
+    private val enableBluetoothLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            Log.i("BluetoothManager", "Bluetooth abilitato con successo.")
+        } else {
+            Log.e("BluetoothManager", "L'utente ha rifiutato di abilitare il Bluetooth.")
         }
+    }
+
+    private val permissionsLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+        if (permissions.all { it.value }) {
+            Log.i("BluetoothManager", "Permessi concessi")
+        } else {
+            Log.e("BluetoothManager", "Permessi mancanti")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        bluetoothService = BluetoothService(application)
+        bleManager = BleManager(this)
 
-        // Verifica se i permessi sono concessi
-        if (arePermissionsGranted()) {
-            startBluetoothScanning()
-        } else {
-            // Se i permessi non sono concessi, chiedi all'utente
-            requestPermissionsLauncher.launch(bluetoothPermissions)
+        // Inizializza il launcher nella classe BluetoothManager
+        bleManager.initializeBluetoothManager(this, enableBluetoothLauncher, permissionsLauncher)
+
+        if(bleManager.hasPermissions()){
+            bleManager.initializeBluetooth()
+        }else{
+            bleManager.requestPermissions()
+            bleManager.initializeBluetooth()
         }
 
         setContent {
-            BluetoothScreenWrapper(bluetoothService)
+            BluetoothScreenWrapper(bleManager)
         }
     }
 
-    private fun arePermissionsGranted(): Boolean {
-        return bluetoothPermissions.all { permission ->
-            ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
-        }
-    }
 
-    private fun startBluetoothScanning() {
-        lifecycleScope.launch {
-            bluetoothService.startScanning()
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        bluetoothService.stopScanning()
-    }
 }
