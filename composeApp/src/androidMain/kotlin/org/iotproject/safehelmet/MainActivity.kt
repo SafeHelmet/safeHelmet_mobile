@@ -24,6 +24,7 @@ class MainActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             if (permissions.all { it.value }) {
                 Log.i("BluetoothManager", "Permessi concessi")
+                bleManager.requestEnableBluetooth()
             } else {
                 Log.e("BluetoothManager", "Permessi mancanti")
             }
@@ -37,12 +38,8 @@ class MainActivity : ComponentActivity() {
         // Inizializza il launcher nella classe BluetoothManager
         bleManager.initializeBluetoothManager(this, enableBluetoothLauncher, permissionsLauncher)
 
-        if(bleManager.hasPermissions()){
-            bleManager.initializeBluetooth()
-        }else{
-            bleManager.requestPermissions()
-            bleManager.initializeBluetooth()
-        }
+        bleManager.initializeBluetooth()
+
 
         setContent {
             BluetoothScreenWrapper(bleManager)

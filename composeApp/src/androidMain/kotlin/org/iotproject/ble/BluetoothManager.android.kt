@@ -29,9 +29,9 @@ actual class BleManager(private val context: Context) {
     private var activity: Activity? = null
 
     private var peripherals = mutableMapOf<String, BluetoothDevice>()
-    private var GYAAAT: BluetoothGatt? = null
+    private var gatt: BluetoothGatt? = null
 
-    // Inizializza il BluetoothManager con l'Activity e i launchers
+
     fun initializeBluetoothManager(
         activity: Activity,
         enableBluetoothLauncher: ActivityResultLauncher<Intent>,
@@ -43,7 +43,7 @@ actual class BleManager(private val context: Context) {
     }
 
 
-    private fun requestEnableBluetooth() {
+    fun requestEnableBluetooth() {
         val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
         enableBluetoothLauncher?.launch(enableBtIntent)
             ?: Log.e("BluetoothManager", "ActivityResultLauncher not initialized.")
@@ -51,19 +51,16 @@ actual class BleManager(private val context: Context) {
 
 
     actual fun initializeBluetooth() {
-        // Verifica che il dispositivo supporti il Bluetooth
+
+        if (!hasPermissions()) {
+            requestPermissions()
+            return
+        }
 
         // Controlla se il Bluetooth è abilitato
         if (!bluetoothAdapter.isEnabled) {
             Log.i("BluetoothManager", "Il Bluetooth non è abilitato. Richiesta di abilitazione.")
             requestEnableBluetooth()
-            return
-        }
-
-        // Verifica dei permessi richiesti
-        if (!hasPermissions()) {
-            Log.e("BluetoothManager", "Permessi Bluetooth mancanti. Richiesta in corso.")
-            permissionsLauncher?.launch(bluetoothPermissions)
             return
         }
 
@@ -80,7 +77,7 @@ actual class BleManager(private val context: Context) {
 
 
     // Metodo per richiedere i permessi
-    fun requestPermissions(
+    private fun requestPermissions(
     ) {
         if (!hasPermissions()) {
             permissionsLauncher?.launch(bluetoothPermissions)
@@ -143,7 +140,7 @@ actual class BleManager(private val context: Context) {
         Log.i("BluetoothManager", "Scansione Bluetooth interrotta.")
     }
 
-    fun hasPermissions(): Boolean {
+    private fun hasPermissions(): Boolean {
         val permissions = listOf(
             Manifest.permission.BLUETOOTH_SCAN,
             Manifest.permission.BLUETOOTH_CONNECT,
@@ -189,22 +186,22 @@ actual class BleManager(private val context: Context) {
         val bluetoothGatt = device.connectGatt(context, false, BleCallbackHandler(context))
 
         // Salva il riferimento al BluetoothGatt nell'oggetto PeripheralDevice
-        GYAAAT = bluetoothGatt
+        gatt = bluetoothGatt
     }
 
 
     actual fun disconnectFromPeripheral() {
-        if (GYAAAT != null) {
-            Log.i("BluetoothManager", "Disconnessione dal dispositivo: ${GYAAAT!!.device.address}")
+        if (gatt != null) {
+            Log.i("BluetoothManager", "Disconnessione dal dispositivo: ${gatt!!.device.address}")
 
             if (ActivityCompat.checkSelfPermission(
                     context,
                     Manifest.permission.BLUETOOTH_CONNECT
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                GYAAAT!!.disconnect()
-                GYAAAT!!.close()
-                GYAAAT = null
+                gatt!!.disconnect()
+                gatt!!.close()
+                gatt = null
             }
         } else {
             Log.e("BluetoothManager", "Nessuna connessione attiva trovata per il dispositivo.")
@@ -213,12 +210,12 @@ actual class BleManager(private val context: Context) {
 
 
     actual fun readCharacteristic(characteristicUUID: String) {
-        if (GYAAAT == null) {
+        if (gatt == null) {
             Log.e("BluetoothManager", "Nessuna connessione attiva per leggere la caratteristica.")
             return
         }
 
-        val characteristic = GYAAAT!!.services
+        val characteristic = gatt!!.services
             .flatMap { it.characteristics }
             .find { it.uuid.toString() == characteristicUUID }
 
@@ -238,7 +235,7 @@ actual class BleManager(private val context: Context) {
         }
 
         // Avvia la lettura asincrona, passando il callback per ricevere il risultato
-        val success = GYAAAT!!.readCharacteristic(characteristic)
+        val success = gatt!!.readCharacteristic(characteristic)
 
         if (success) {
             Log.i("BluetoothManager", "Lettura della caratteristica avviata: $characteristicUUID")
@@ -252,7 +249,7 @@ actual class BleManager(private val context: Context) {
 
 
     actual fun writeCharacteristic(characteristicUUID: String, value: String) {
-        if (GYAAAT == null) {
+        if (gatt == null) {
             Log.e(
                 "BluetoothManager",
                 "Nessuna connessione attiva per scrivere sulla caratteristica."
@@ -270,7 +267,7 @@ actual class BleManager(private val context: Context) {
         }
 
         // Trova la caratteristica desiderata
-        val gattService = GYAAAT!!.services.find { service ->
+        val gattService = gatt!!.services.find { service ->
             service.characteristics.any { it.uuid.toString() == characteristicUUID }
         }
 
@@ -291,7 +288,7 @@ actual class BleManager(private val context: Context) {
         }
 
         // Scrivi il valore sulla caratteristica
-        val response = GYAAAT!!.writeCharacteristic(
+        val response = gatt!!.writeCharacteristic(
             characteristic,
             value.toByteArray(),
             BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
