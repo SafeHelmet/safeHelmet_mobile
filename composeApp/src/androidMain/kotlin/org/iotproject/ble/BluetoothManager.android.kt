@@ -5,7 +5,9 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothStatusCodes
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -13,8 +15,6 @@ import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothStatusCodes
 
 actual class BleManager(private val context: Context) {
 
@@ -46,7 +46,7 @@ actual class BleManager(private val context: Context) {
     private fun requestEnableBluetooth() {
         val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
         enableBluetoothLauncher?.launch(enableBtIntent)
-            ?: Log.e("BluetoothManager", "ActivityResultLauncher non inizializzato.")
+            ?: Log.e("BluetoothManager", "ActivityResultLauncher not initialized.")
     }
 
 

@@ -1,5 +1,3 @@
 package org.iotproject.ble
 
-actual class BleCallbackHandler {
-
-}
+actual class BleCallbackHandler
