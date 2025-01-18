@@ -14,19 +14,19 @@ class MainActivity : ComponentActivity() {
     private val enableBluetoothLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                Log.i("BluetoothManager", "Bluetooth abilitato con successo.")
+                Log.i("BluetoothManager", "Bluetooth enabled successfully.")
             } else {
-                Log.e("BluetoothManager", "L'utente ha rifiutato di abilitare il Bluetooth.")
+                Log.e("BluetoothManager", "The user refused to enable Bluetooth.")
             }
         }
 
     private val permissionsLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             if (permissions.all { it.value }) {
-                Log.i("BluetoothManager", "Permessi concessi")
+                Log.i("BluetoothManager", "Permission conceded")
                 bleManager.requestEnableBluetooth()
             } else {
-                Log.e("BluetoothManager", "Permessi mancanti")
+                Log.e("BluetoothManager", "Missing permission")
             }
         }
 
@@ -35,16 +35,13 @@ class MainActivity : ComponentActivity() {
 
         bleManager = BleManager(this)
 
-        // Inizializza il launcher nella classe BluetoothManager
+        // Initialize the launcher in the BluetoothManager class
         bleManager.initializeBluetoothManager(this, enableBluetoothLauncher, permissionsLauncher)
-
         bleManager.initializeBluetooth()
-
 
         setContent {
             BluetoothScreenWrapper(bleManager)
         }
     }
-
 
 }

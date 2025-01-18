@@ -57,18 +57,18 @@ actual class BleManager(private val context: Context) {
             return
         }
 
-        // Controlla se il Bluetooth è abilitato
+        // Check if Bluetooth is enabled
         if (!bluetoothAdapter.isEnabled) {
-            Log.i("BluetoothManager", "Il Bluetooth non è abilitato. Richiesta di abilitazione.")
+            Log.i("BluetoothManager", "Bluetooth is not enabled. Requesting to enable it.")
             requestEnableBluetooth()
             return
         }
 
-        Log.i("BluetoothManager", "Bluetooth inizializzato correttamente.")
+        Log.i("BluetoothManager", "Bluetooth initialized correctly.")
     }
 
 
-    // Permessi richiesti
+    // Required permissions
     private val bluetoothPermissions = arrayOf(
         Manifest.permission.BLUETOOTH_SCAN,
         Manifest.permission.BLUETOOTH_CONNECT,
@@ -76,17 +76,17 @@ actual class BleManager(private val context: Context) {
     )
 
 
-    // Metodo per richiedere i permessi
+    // Method to request permissions
     private fun requestPermissions(
     ) {
         if (!hasPermissions()) {
             permissionsLauncher?.launch(bluetoothPermissions)
         } else {
-            Log.i("BluetoothManager", "Permessi già concessi")
+            Log.i("BluetoothManager", "Permissions already granted")
         }
     }
 
-    // Callback condiviso
+    // Shared Callback
     private val scanCallback = object : android.bluetooth.le.ScanCallback() {
         override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult?) {
             super.onScanResult(callbackType, result)
@@ -96,19 +96,19 @@ actual class BleManager(private val context: Context) {
                         Manifest.permission.BLUETOOTH_CONNECT
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
-                    Log.e("BluetoothManager", "Mancano i permessi")
+                    Log.e("BluetoothManager", "Permissions are missing")
                     return
                 }
                 peripherals[device.address] = device
                 scannedDevices.add(BleDevice(device.name, device.address))
                 onDevicesFound?.invoke(scannedDevices)
-                Log.d("BluetoothManager", "Dispositivo trovato: ${device.name} - ${device.address}")
+                Log.d("BluetoothManager", "Found device: ${device.name} - ${device.address}")
             }
         }
 
         override fun onScanFailed(errorCode: Int) {
             super.onScanFailed(errorCode)
-            Log.e("BluetoothManager", "Errore nella scansione: $errorCode")
+            Log.e("BluetoothManager", "Error on scan: $errorCode")
         }
     }
 
@@ -119,11 +119,11 @@ actual class BleManager(private val context: Context) {
                 Manifest.permission.BLUETOOTH_SCAN
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.e("BluetoothManager", "Mancano i permessi")
+            Log.e("BluetoothManager", "Missing permissions")
             return
         }
         bluetoothLeScanner?.startScan(scanCallback)
-        Log.i("BluetoothManager", "Scansione Bluetooth avviata.")
+        Log.i("BluetoothManager", "Bluetooth scan started.")
     }
 
     actual fun stopScanning() {
@@ -133,11 +133,11 @@ actual class BleManager(private val context: Context) {
                 Manifest.permission.BLUETOOTH_SCAN
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.e("BluetoothManager", "Mancano i permessi")
+            Log.e("BluetoothManager", "Missing permissions")
             return
         }
-        bluetoothLeScanner?.stopScan(scanCallback) // Usa lo stesso callback
-        Log.i("BluetoothManager", "Scansione Bluetooth interrotta.")
+        bluetoothLeScanner?.stopScan(scanCallback) // Use the same callback
+        Log.i("BluetoothManager", "Bluetooth scan stopped.")
     }
 
     private fun hasPermissions(): Boolean {
@@ -147,7 +147,6 @@ actual class BleManager(private val context: Context) {
             Manifest.permission.ACCESS_FINE_LOCATION
         )
 
-        // Verifica permessi
         val missingPermissions = permissions.filter { permission ->
             ContextCompat.checkSelfPermission(
                 context,
@@ -155,9 +154,8 @@ actual class BleManager(private val context: Context) {
             ) != PackageManager.PERMISSION_GRANTED
         }
 
-        // Log dettagliato
-        if (missingPermissions.isNotEmpty()) {
-            Log.e("BluetoothManager", "Permessi mancanti: ${missingPermissions.joinToString()}")
+        if (missingPermissions.isNotEmpty()) {  // Detailed log
+            Log.e("BluetoothManager", "Missing permissions: ${missingPermissions.joinToString()}")
             return false
         }
 
@@ -168,7 +166,7 @@ actual class BleManager(private val context: Context) {
         stopScanning()
         val device = peripherals[uuid]
         if (device == null) {
-            Log.e("BluetoothManager", "Dispositivo non trovato")
+            Log.e("BluetoothManager", "Device not found")
             return
         }
         if (ActivityCompat.checkSelfPermission(
@@ -176,23 +174,22 @@ actual class BleManager(private val context: Context) {
                 Manifest.permission.BLUETOOTH_CONNECT
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.e("BluetoothManager", "Permessi mancanti per la connessione.")
+            Log.e("BluetoothManager", "Can't connect due to missing permission.")
             return
         }
 
-        Log.i("BluetoothManager", "Connessione al dispositivo: ${device.name} - ${device.address}")
+        Log.i("BluetoothManager", "Connected to device: ${device.name} - ${device.address}")
 
-        // Usa il metodo connectGatt per stabilire la connessione
+        // Use the connectGatt method to establish the connection
         val bluetoothGatt = device.connectGatt(context, false, BleCallbackHandler(context))
 
-        // Salva il riferimento al BluetoothGatt nell'oggetto PeripheralDevice
         gatt = bluetoothGatt
     }
 
 
     actual fun disconnectFromPeripheral() {
         if (gatt != null) {
-            Log.i("BluetoothManager", "Disconnessione dal dispositivo: ${gatt!!.device.address}")
+            Log.i("BluetoothManager", "Disconnecting from device: ${gatt!!.device.address}")
 
             if (ActivityCompat.checkSelfPermission(
                     context,
@@ -204,14 +201,14 @@ actual class BleManager(private val context: Context) {
                 gatt = null
             }
         } else {
-            Log.e("BluetoothManager", "Nessuna connessione attiva trovata per il dispositivo.")
+            Log.e("BluetoothManager", "No active connection found for the device.")
         }
     }
 
 
     actual fun readCharacteristic(characteristicUUID: String) {
         if (gatt == null) {
-            Log.e("BluetoothManager", "Nessuna connessione attiva per leggere la caratteristica.")
+            Log.e("BluetoothManager", "No active connection to read the characteristic.")
             return
         }
 
@@ -220,29 +217,29 @@ actual class BleManager(private val context: Context) {
             .find { it.uuid.toString() == characteristicUUID }
 
         if (characteristic == null) {
-            Log.e("BluetoothManager", "Caratteristica non trovata: $characteristicUUID")
+            Log.e("BluetoothManager", "Characteristic not found: $characteristicUUID")
             return
         }
 
-        // Controllo dei permessi
+        // Permission check
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.BLUETOOTH_CONNECT
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.e("BluetoothManager", "Permesso BLUETOOTH_CONNECT non concesso.")
+            Log.e("BluetoothManager", "Permission BLUETOOTH_CONNECT non conceded.")
             return
         }
 
-        // Avvia la lettura asincrona, passando il callback per ricevere il risultato
+        // Start the asynchronous read, passing the callback to receive the result
         val success = gatt!!.readCharacteristic(characteristic)
 
         if (success) {
-            Log.i("BluetoothManager", "Lettura della caratteristica avviata: $characteristicUUID")
+            Log.i("BluetoothManager", "Characteristic read started: $characteristicUUID")
         } else {
             Log.e(
                 "BluetoothManager",
-                "Errore durante la lettura della caratteristica: $characteristicUUID"
+                "Error during characteristic read: $characteristicUUID"
             )
         }
     }
@@ -252,7 +249,7 @@ actual class BleManager(private val context: Context) {
         if (gatt == null) {
             Log.e(
                 "BluetoothManager",
-                "Nessuna connessione attiva per scrivere sulla caratteristica."
+                "No active connection to write on the characteristic."
             )
             return
         }
@@ -262,11 +259,11 @@ actual class BleManager(private val context: Context) {
                 Manifest.permission.BLUETOOTH_CONNECT
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.e("BluetoothManager", "Permessi mancanti per scrivere sulla caratteristica.")
+            Log.e("BluetoothManager", "Missing permissions to write the characteristic.")
             return
         }
 
-        // Trova la caratteristica desiderata
+        // Find the desired characteristic
         val gattService = gatt!!.services.find { service ->
             service.characteristics.any { it.uuid.toString() == characteristicUUID }
         }
@@ -274,7 +271,7 @@ actual class BleManager(private val context: Context) {
         if (gattService == null) {
             Log.e(
                 "BluetoothManager",
-                "Servizio con la caratteristica $characteristicUUID non trovato."
+                "Service with characteristic $characteristicUUID not found."
             )
             return
         }
@@ -283,20 +280,20 @@ actual class BleManager(private val context: Context) {
             gattService.characteristics.find { it.uuid.toString() == characteristicUUID }
 
         if (characteristic == null) {
-            Log.e("BluetoothManager", "Caratteristica con UUID $characteristicUUID non trovata.")
+            Log.e("BluetoothManager", "Characteristic with UUID $characteristicUUID not found.")
             return
         }
 
-        // Scrivi il valore sulla caratteristica
+        // Write the value on the characteristic
         val response = gatt!!.writeCharacteristic(
             characteristic,
             value.toByteArray(),
             BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
         )
         if (response == BluetoothStatusCodes.SUCCESS) {
-            Log.i("BluetoothManager", "Valore scritto sulla caratteristica: $value")
+            Log.i("BluetoothManager", "Value written on characteristic: $value")
         } else {
-            Log.e("BluetoothManager", "Errore durante la scrittura sulla caratteristica.")
+            Log.e("BluetoothManager", "Error writing to characteristic.")
         }
     }
 
