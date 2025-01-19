@@ -23,6 +23,7 @@ class ParseSensorData(byteArray: ByteArray) {
     init {
         var offset = 0
 
+        // Estrai i valori per ogni sensore, incrementando l'offset ogni volta
         temp = byteArray.copyOfRange(offset, offset + lengths.temp).toFloat()
         offset += lengths.temp
 
@@ -35,15 +36,18 @@ class ParseSensorData(byteArray: ByteArray) {
         crash = byteArray.copyOfRange(offset, offset + lengths.crash).toFloat()
         offset += lengths.crash
 
+        // Gestione del gas (3 bit)
+
         gas = extractBits(byteArray[offset], 0, 2)
         offset += lengths.gas
-
+        // Gestione dell'anomalia (5 bit)
         anomaly = extractBits(byteArray[offset], 0, 4)
         offset += lengths.anomaly
     }
 
-
+    // Funzione generica per estrarre i bit da un byte
     private fun extractBits(byte: Byte, fromBit: Int, toBit: Int): BooleanArray {
+
         require(fromBit in 0..7 && toBit in 0..7 && fromBit <= toBit) {
             "fromBit e toBit devono essere compresi tra 0 e 7, e fromBit <= toBit"
         }
@@ -64,11 +68,8 @@ class ParseSensorData(byteArray: ByteArray) {
             append("Humidity: $hum, ")
             append("Lux: $lux, ")
             append("Crash: $crash, ")
-            append("Gas values: ")
-            for (g in gas) append(if (g) "1" else "0")
-            append(", ")
-            append("Anomaly values: ")
-            for (a in anomaly) append(if (a) "1" else "0")
+            append("Gas values: ${gas.joinToString()}, ")
+            append("Anomaly values: ${anomaly.joinToString()}")
         }
     }
 
