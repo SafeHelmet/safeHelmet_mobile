@@ -11,10 +11,54 @@ import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import java.nio.charset.StandardCharsets
-import java.util.UUID.fromString
+import java.util.UUID
+
+
+//    uuidFrom16Bit(0x0044)
+//    uuidFrom16Bit(0x0053)
+fun uuidFrom16Bit(shortUuid: Int): UUID {
+    return UUID.fromString(String.format("%04x-0000-1000-8000-00805f9b34fb", shortUuid))
+}
 
 
 actual class BleCallbackHandler(private val context: Context) : BluetoothGattCallback() {
+
+    private fun subscribeToCharacteristic(gatt: BluetoothGatt, characteristicUUID: Int) {
+        val dataCharacteristic =
+            gatt.services[2].characteristics.find { characteristic ->
+                characteristic.descriptors.any { descriptor ->
+                    descriptor.uuid == uuidFrom16Bit(characteristicUUID)
+                }
+            }
+
+
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        if (gatt.setCharacteristicNotification(dataCharacteristic, true)) {
+            Log.i("BluetoothManager", "Notification activated for the characteristic")
+        } else {
+            Log.e("BluetoothManager", "Error in the configuration of notification")
+        }
+
+        val descriptor0 = dataCharacteristic?.descriptors?.get(0)
+        if (descriptor0?.let {
+                gatt.writeDescriptor(
+                    it,
+                    BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                )
+            } == BluetoothStatusCodes.SUCCESS
+        ) {
+            Log.i("BluetoothManager", "Description activated")
+        } else {
+            Log.e("BluetoothManager", "Error in the configuration of the description")
+        }
+    }
+
     override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
         super.onConnectionStateChange(gatt, status, newState)
         when (newState) {
@@ -40,32 +84,9 @@ actual class BleCallbackHandler(private val context: Context) : BluetoothGattCal
         super.onServicesDiscovered(gatt, status)
         if (status == BluetoothGatt.GATT_SUCCESS) {
             Log.i("BluetoothManager", "Services discovered for ${gatt.device.address}")
-            val notifyCharacteristic =
-                gatt.getService(fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))
-                    .getCharacteristic(fromString("f47ac10b-58cc-4372-a567-0e02b2c3d481"))
-            if (ActivityCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.BLUETOOTH_CONNECT
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                return
-            }
-            if (gatt.setCharacteristicNotification(notifyCharacteristic, true)) {
-                Log.i("BluetoothManager", "Notification activated for the characteristic")
-            } else {
-                Log.e("BluetoothManager", "Error in the configuration of notification")
-            }
 
-            val descriptor0 = notifyCharacteristic.descriptors[0]
-            if (gatt.writeDescriptor(
-                    descriptor0,
-                    BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                ) == BluetoothStatusCodes.SUCCESS
-            ) {
-                Log.i("BluetoothManager", "Description activated")
-            } else {
-                Log.e("BluetoothManager", "Error in the configuration of the description")
-            }
+            subscribeToCharacteristic(gatt,0x0044)
+            subscribeToCharacteristic(gatt,0x0053)
 
         } else {
             Log.e("BluetoothManager", "Error in the discovery of services: $status")
