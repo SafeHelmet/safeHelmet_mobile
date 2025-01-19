@@ -112,6 +112,7 @@ actual class BleCallbackHandler(private val context: Context) : BluetoothGattCal
         value: ByteArray
     ) {
         super.onCharacteristicChanged(gatt, characteristic, value)
-        Log.i("BluetoothManager", "Characteristic changed: ${String(value)}")
+        val parseSensorData = ParseSensorData(value)
+        Log.i("BluetoothManager", parseSensorData.printValues())
     }
 }
