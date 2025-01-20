@@ -20,6 +20,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.touchlab.kermit.Logger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.launch
+import org.iotproject.api.ApiClient
 import org.iotproject.ble.BleDevice
 import org.iotproject.ble.BleManager
 
@@ -27,6 +33,7 @@ enum class ConnectionState {
     NON_CONNECTED,
     CONNECTED
 }
+
 
 @Composable
 fun BluetoothScreenWrapper(bleManager: BleManager) {
@@ -60,6 +67,7 @@ fun NonConnectedScreen(
     bleManager: BleManager,
     onConnectButtonClick: () -> Unit
 ) {
+    val apiClient = remember { ApiClient() }
     Column(modifier = Modifier.padding(16.dp)) {
         // Buttons for starting and stopping scanning
         Button(
@@ -78,6 +86,30 @@ fun NonConnectedScreen(
                 .padding(bottom = 16.dp)
         ) {
             Text("Stop Scanning", fontSize = 18.sp)
+        }
+
+        val apiClient = remember { ApiClient() }
+        var apiResponse by remember { mutableStateOf<String?>(null) }
+
+        // Esegui la chiamata API quando il pulsante viene premuto
+        Button(
+            onClick = {
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val response = apiClient.greeting()
+                        // Aggiorna lo stato con la risposta dell'API
+                        apiResponse = response
+                        Logger.i(apiResponse.toString())
+                    } catch (e: Exception) {
+                        Logger.i(apiResponse.toString())
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        ) {
+            Text("API call")
         }
 
         // Show a list of scanned devices
@@ -125,39 +157,7 @@ fun ConnectedScreen(
         ) {
             Text("Disconnetti", fontSize = 18.sp)
         }
-        Button(
-            onClick = {
-                bleManager.writeCharacteristic(
-                    "f47ac10b-58cc-4372-a567-0e02b2c3d480",
-                    "ON"
-                )
-            }
-        ) {
-            Text("Accendi led")
-        }
-        Button(
-            onClick = {
-                bleManager.writeCharacteristic(
-                    "f47ac10b-58cc-4372-a567-0e02b2c3d480",
-                    "OFF"
-                )
-            }
-        ) {
-            Text("Spegni led")
-        }
 
-        Column(modifier = Modifier.padding(16.dp)) {
-            Button(
-                onClick = {
-                    bleManager.readCharacteristic("f47ac10b-58cc-4372-a567-0e02b2c3d480")
-                },
-                modifier = Modifier.padding(vertical = 8.dp)
-            ) {
-                Text("Leggi stato")
-            }
-
-
-        }
     }
 }
 
