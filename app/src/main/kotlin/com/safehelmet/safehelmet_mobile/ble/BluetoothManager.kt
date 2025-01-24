@@ -24,7 +24,7 @@ data class BleDevice(
 class BleManager(private val context: Context) {
 
     private val scannedDevices: MutableSet<BleDevice> = mutableSetOf()
-    actual var onDevicesFound: ((Set<BleDevice>) -> Unit)? = null
+    var onDevicesFound: ((Set<BleDevice>) -> Unit)? = null
 
     private val bluetoothAdapter: BluetoothAdapter =
         (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
@@ -55,7 +55,7 @@ class BleManager(private val context: Context) {
     }
 
 
-    actual fun initializeBluetooth() {
+    fun initializeBluetooth() {
 
         if (!hasPermissions()) {
             requestPermissions()
@@ -117,7 +117,7 @@ class BleManager(private val context: Context) {
         }
     }
 
-    actual fun startScanning() {
+    fun startScanning() {
         val bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
         if (ActivityCompat.checkSelfPermission(
                 context,
@@ -131,7 +131,7 @@ class BleManager(private val context: Context) {
         Log.i("BluetoothManager", "Bluetooth scan started.")
     }
 
-    actual fun stopScanning() {
+    fun stopScanning() {
         val bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
         if (ActivityCompat.checkSelfPermission(
                 context,
@@ -167,7 +167,7 @@ class BleManager(private val context: Context) {
         return true
     }
 
-    actual fun connectToPeripheral(uuid: String) {
+    fun connectToPeripheral(uuid: String) {
         stopScanning()
         val device = peripherals[uuid]
         if (device == null) {
@@ -192,7 +192,7 @@ class BleManager(private val context: Context) {
     }
 
 
-    actual fun disconnectFromPeripheral() {
+    fun disconnectFromPeripheral() {
         if (gatt != null) {
             Log.i("BluetoothManager", "Disconnecting from device: ${gatt!!.device.address}")
 
@@ -211,7 +211,7 @@ class BleManager(private val context: Context) {
     }
 
 
-    actual fun readCharacteristic(characteristicUUID: String) {
+    fun readCharacteristic(characteristicUUID: String) {
         if (gatt == null) {
             Log.e("BluetoothManager", "No active connection to read the characteristic.")
             return
@@ -250,7 +250,7 @@ class BleManager(private val context: Context) {
     }
 
 
-    actual fun writeCharacteristic(characteristicUUID: String, value: String) {
+    fun writeCharacteristic(characteristicUUID: String, value: String) {
         if (gatt == null) {
             Log.e(
                 "BluetoothManager",
