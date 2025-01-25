@@ -1,0 +1,5 @@
+- vedere tutte le letture
+- grafico delle segnalazioni / sensori
+- collegameto api meteo per dinamico o meno
+- segnalazione con anomalia
+- con il qr associare il casco al telefono
