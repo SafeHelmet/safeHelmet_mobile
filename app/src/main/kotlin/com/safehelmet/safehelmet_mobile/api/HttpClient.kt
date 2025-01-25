@@ -1,6 +1,7 @@
 package com.safehelmet.safehelmet_mobile.api
 
 import android.util.Log
+import com.safehelmet.safehelmet_mobile.BuildConfig
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -10,7 +11,7 @@ import java.io.IOException
 class HttpClient {
 
     private val client = OkHttpClient()
-    private val authToken = "TODO"
+    private val authToken = BuildConfig.API_TOKEN // Sostituisci con il tuo token di autorizzazione
 
     // Funzione per eseguire la richiesta con autorizzazione
     fun getRequest(url: String, callback: (Response?) -> Unit) {
