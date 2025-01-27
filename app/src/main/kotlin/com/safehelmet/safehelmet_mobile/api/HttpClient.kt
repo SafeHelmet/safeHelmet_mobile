@@ -48,7 +48,7 @@ class HttpClient {
         val request = Request.Builder()
             .url(url)
             .post(body)
-            .addHeader("Authorization", "Bearer $authToken")
+            .addHeader("Authorization", authToken) // Aggiungi il token di autorizzazione
             .build()
 
         client.newCall(request).enqueue(object : Callback {
@@ -61,6 +61,8 @@ class HttpClient {
                 if (response.isSuccessful) {
                     callback(response)
                 } else {
+                    Log.e("API_ERROR", "Response failed with status code: ${response.code}")
+                    Log.e("API_ERROR", "Error body: ${response.body?.string() ?: "No error body"}")
                     callback(null)
                 }
             }
