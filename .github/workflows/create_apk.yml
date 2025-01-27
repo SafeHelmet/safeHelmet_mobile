@@ -3,8 +3,8 @@ name: Build Android APK
 on:
   push:
     branches:
-      - main # Avvia il workflow quando viene effettuato un push su main
-  pull_request: # Avvia il workflow per ogni pull request
+      - main
+  pull_request:
     branches:
       - main
 
@@ -22,10 +22,23 @@ jobs:
       - name: Set up Java (OpenJDK)
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin' # See 'Supported distributions' for available options
-          java-version: '21'
+          distribution: 'temurin'
+          java-version: '17'
 
-      # Step 3: Cache per Gradle
+      # Step 3: Installare l'SDK Android
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v2
+        with:
+          api-level: 33
+          build-tools: 33.0.2
+          target: default
+          ndk: false
+
+      # Step 4: Creare il file local.properties
+      - name: Create local.properties
+        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > ./local.properties
+
+      # Step 5: Cache per Gradle
       - name: Cache Gradle dependencies
         uses: actions/cache@v4
         with:
@@ -34,11 +47,11 @@ jobs:
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
-      # Step 4: Build APK
+      # Step 6: Build APK
       - name: Build APK
         run: ./gradlew assembleRelease
 
-      # Step 5: Salvare l'APK come Artifact
+      # Step 7: Salvare l'APK come Artifact
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
