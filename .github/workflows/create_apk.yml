@@ -6,7 +6,7 @@ on:
       - main # Avvia il workflow quando viene effettuato un push su main
   pull_request: # Avvia il workflow per ogni pull request
     branches:
-      - 'main'
+      - main
 
 jobs:
   build:
