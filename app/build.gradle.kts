@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -16,6 +18,19 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        //load the values from .properties file
+        val keystoreFile = project.rootProject.file("local.properties")
+        val properties = Properties()
+        properties.load(keystoreFile.inputStream())
+
+        //return empty key in case something goes wrong
+        val apiToken = properties.getProperty("API_TOKEN") ?: ""
+        buildConfigField(
+            type = "String",
+            name = "API_TOKEN",
+            value = "\"$apiToken\""
+        )
     }
 
     buildTypes {
@@ -25,10 +40,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "API_TOKEN", "\"${project.findProperty("API_TOKEN")}\"")
         }
         debug {
-            buildConfigField("String", "API_TOKEN", "\"${project.findProperty("API_TOKEN")}\"")
         }
     }
     compileOptions {
