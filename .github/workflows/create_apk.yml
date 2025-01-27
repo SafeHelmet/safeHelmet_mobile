@@ -27,12 +27,7 @@ jobs:
 
       # Step 3: Installare l'SDK Android
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v2
-        with:
-          api-level: 33
-          build-tools: 33.0.2
-          target: default
-          ndk: false
+        uses: android-actions/setup-android@v3
 
       # Step 4: Creare il file local.properties
       - name: Create local.properties
@@ -55,5 +50,5 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: android-apk
+          name: safeHelmet-${{ github.run_id }}
           path: app/build/outputs/apk/release/*.apk
