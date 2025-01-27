@@ -1,0 +1,45 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main # Avvia il workflow quando viene effettuato un push su main
+  pull_request: # Avvia il workflow per ogni pull request
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout del codice
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Configurare la JDK
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+
+      # Step 3: Cache per Gradle
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+
+      # Step 4: Build APK
+      - name: Build APK
+        run: ./gradlew assembleRelease
+
+      # Step 5: Salvare l'APK come Artifact
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-apk
+          path: app/build/outputs/apk/release/*.apk
