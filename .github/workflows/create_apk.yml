@@ -23,6 +23,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '11'
+          distribution: 'temurin'
 
       # Step 3: Cache per Gradle
       - name: Cache Gradle dependencies
