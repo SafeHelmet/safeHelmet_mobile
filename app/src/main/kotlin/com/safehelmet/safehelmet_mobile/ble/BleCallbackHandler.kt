@@ -14,9 +14,6 @@ import com.safehelmet.safehelmet_mobile.parse.ParseData
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 
-
-//    uuidFrom16Bit(0x0044)
-//    uuidFrom16Bit(0x0053)
 fun uuidFrom16Bit(shortUuid: Int): UUID {
     return UUID.fromString(String.format("%04x-0000-1000-8000-00805f9b34fb", shortUuid))
 }
@@ -85,8 +82,10 @@ class BleCallbackHandler(private val context: Context) : BluetoothGattCallback()
         if (status == BluetoothGatt.GATT_SUCCESS) {
             Log.i("BluetoothManager", "Services discovered for ${gatt.device.address}")
 
-            subscribeToCharacteristic(gatt,0x0044)
-            subscribeToCharacteristic(gatt,0x0053)
+            subscribeToCharacteristic(gatt, 0x0044)  // data
+            subscribeToCharacteristic(gatt, 0x4331)  // crash1
+            subscribeToCharacteristic(gatt, 0x4332)  // crash2
+            subscribeToCharacteristic(gatt, 0x0053)  // sleep
 
         } else {
             Log.e("BluetoothManager", "Error in the discovery of services: $status")
