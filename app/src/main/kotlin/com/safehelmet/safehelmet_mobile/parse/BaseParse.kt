@@ -41,4 +41,6 @@ abstract class BaseParse(private val byteArray: ByteArray) {
                     (this[0].toInt() and 0xff)
         )
     }
+
+    abstract fun printValues() : String
 }

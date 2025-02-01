@@ -30,13 +30,13 @@ class ParseCrash2(byteArray: ByteArray) : BaseParse(byteArray) {
         incorrect_posture_percentuage = extractFloatSensor("incorrect_posture_percentuage", offset)
     }
 
-    fun printValues(): String {
+    override fun printValues(): String {
         return buildString {
             append("std_x: $std_x, ")
             append("std_y: $std_y, ")
             append("std_z: $std_z, ")
-            append("std_g: $max_g")
-            append("std_g: $incorrect_posture_percentuage")
+            append("max_g: $max_g, ")
+            append("incorrect_posture_percentuage: $incorrect_posture_percentuage")
         }
     }
 }

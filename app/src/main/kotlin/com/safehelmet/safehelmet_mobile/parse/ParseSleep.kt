@@ -18,7 +18,7 @@ class ParseSleep(byteArray: ByteArray) : BaseParse(byteArray) {
         sleep = extractBitsSensor("sleep", 0, 0, offset) // Firsts 5 bit
     }
 
-    fun printValues(): String {
+    override fun printValues(): String {
         return buildString {
             for (w in sleep) append(if (w) "1" else "0")
         }

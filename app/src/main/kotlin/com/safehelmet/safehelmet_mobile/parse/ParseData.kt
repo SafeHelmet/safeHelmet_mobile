@@ -27,11 +27,11 @@ class ParseData(byteArray: ByteArray) : BaseParse(byteArray) {
         hum = extractFloatSensor("hum", offset)
         lux = extractFloatSensor("lux", offset)
         gas = extractBitsSensor("gas", 0, 2, offset)
-        wearables = extractBitsSensor("anomaly", 0, 1, offset)
+        wearables = extractBitsSensor("wearables", 0, 1, offset)
     }
 
 
-    fun printValues(): String {
+    override fun printValues(): String {
         return buildString {
             append("Temperature: $temp, ")
             append("Humidity: $hum, ")
@@ -40,7 +40,7 @@ class ParseData(byteArray: ByteArray) : BaseParse(byteArray) {
             for (g in gas) append(if (g) "1" else "0")
             append(", ")
 
-            append("Anomaly values: ")
+            append("Wearables: ")
             for (w in wearables) append(if (w) "1" else "0")
 
         }
