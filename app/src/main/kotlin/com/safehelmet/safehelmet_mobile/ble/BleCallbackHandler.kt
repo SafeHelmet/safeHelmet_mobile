@@ -10,7 +10,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import com.safehelmet.safehelmet_mobile.parse.ParseEnvironmentData
+import com.safehelmet.safehelmet_mobile.parse.ParseData
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 
@@ -112,7 +112,7 @@ class BleCallbackHandler(private val context: Context) : BluetoothGattCallback()
         value: ByteArray
     ) {
         super.onCharacteristicChanged(gatt, characteristic, value)
-        val parseSensorData = ParseEnvironmentData(value)
+        val parseSensorData = ParseData(value)
         Log.i("BluetoothManager", parseSensorData.printValues())
     }
 }
