@@ -4,18 +4,19 @@ import android.Manifest
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattDescriptor
-import android.bluetooth.BluetoothStatusCodes
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import com.safehelmet.safehelmet_mobile.parse.BaseParse
+import com.safehelmet.safehelmet_mobile.parse.ParseCollector
+import com.safehelmet.safehelmet_mobile.parse.ParseCrash1
+import com.safehelmet.safehelmet_mobile.parse.ParseCrash2
+import com.safehelmet.safehelmet_mobile.parse.ParseData
+import com.safehelmet.safehelmet_mobile.parse.ParseSleep
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 
-
-//    uuidFrom16Bit(0x0044)
-//    uuidFrom16Bit(0x0053)
 fun uuidFrom16Bit(shortUuid: Int): UUID {
     return UUID.fromString(String.format("%04x-0000-1000-8000-00805f9b34fb", shortUuid))
 }
@@ -44,18 +45,6 @@ class BleCallbackHandler(private val context: Context) : BluetoothGattCallback()
             Log.e("BluetoothManager", "Error in the configuration of notification")
         }
 
-        val descriptor0 = dataCharacteristic?.descriptors?.get(0)
-        if (descriptor0?.let {
-                gatt.writeDescriptor(
-                    it,
-                    BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                )
-            } == BluetoothStatusCodes.SUCCESS
-        ) {
-            Log.i("BluetoothManager", "Description activated")
-        } else {
-            Log.e("BluetoothManager", "Error in the configuration of the description")
-        }
     }
 
     override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
@@ -84,8 +73,10 @@ class BleCallbackHandler(private val context: Context) : BluetoothGattCallback()
         if (status == BluetoothGatt.GATT_SUCCESS) {
             Log.i("BluetoothManager", "Services discovered for ${gatt.device.address}")
 
-            subscribeToCharacteristic(gatt,0x0044)
-            subscribeToCharacteristic(gatt,0x0053)
+            subscribeToCharacteristic(gatt, 0x0044)  // data
+            subscribeToCharacteristic(gatt, 0x4331)  // crash1
+            subscribeToCharacteristic(gatt, 0x4332)  // crash2
+            subscribeToCharacteristic(gatt, 0x0053)  // sleep
 
         } else {
             Log.e("BluetoothManager", "Error in the discovery of services: $status")
@@ -111,7 +102,16 @@ class BleCallbackHandler(private val context: Context) : BluetoothGattCallback()
         value: ByteArray
     ) {
         super.onCharacteristicChanged(gatt, characteristic, value)
-        val parseSensorData = ParseSensorData(value)
-        Log.i("BluetoothManager", parseSensorData.printValues())
+
+        val parseValue: BaseParse? = when (characteristic.descriptors[1].uuid) {
+            uuidFrom16Bit(0x0044) -> ParseData(value)
+            uuidFrom16Bit(0x4331) -> ParseCrash1(value)
+            uuidFrom16Bit(0x4332) -> ParseCrash2(value)
+            uuidFrom16Bit(0x0053) -> ParseSleep(value)
+            else -> null
+        }
+        ParseCollector.processParse(parseValue)
+
+        parseValue?.let { Log.i("BluetoothManager", it.printValues()) }
     }
 }
