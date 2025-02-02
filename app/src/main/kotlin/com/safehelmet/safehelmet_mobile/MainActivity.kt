@@ -1,7 +1,9 @@
 package com.safehelmet.safehelmet_mobile
 
+import LoginScreen
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,15 +27,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import com.safehelmet.safehelmet_mobile.api.HttpClient
 import com.safehelmet.safehelmet_mobile.ble.BleDevice
 import com.safehelmet.safehelmet_mobile.ble.BleManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import login
 
 
 class MainActivity : ComponentActivity() {
+    var isLogin = mutableStateOf(false)
     private lateinit var bleManager: BleManager
 
     private val enableBluetoothLauncher =
@@ -65,11 +70,31 @@ class MainActivity : ComponentActivity() {
         bleManager.initializeBluetooth()
 
         setContent {
-            BluetoothScreenWrapper(bleManager)
+            if (!isLogin.value) {
+                LoginScreen { username, password ->
+                    lifecycleScope.launch {
+                        val loginSuccessful = login(username, password)
+
+                        if (loginSuccessful) {
+                            isLogin.value = true
+                        }else{
+                            Toast.makeText(this@MainActivity, "Not a valid login", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            } else {
+                BluetoothScreenWrapper(bleManager)
+            }
         }
     }
 
+
+
+
+
 }
+
+
 
 
 enum class ConnectionState {
