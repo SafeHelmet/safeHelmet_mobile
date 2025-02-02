@@ -149,32 +149,6 @@ fun NonConnectedScreen(
             Text("API call")
         }
 
-        Button(
-            onClick = {
-                CoroutineScope(Dispatchers.IO).launch {
-                    HttpClient.postRequest(
-                        "https://safehelmet-backend.onrender.com/api/v1/worksites",
-                        """
-                                {
-                                    "name": "Cantiere della sburra",
-                                    "latitude": 45.0,
-                                    "longitude": 9.0,
-                                    "start_date_of_work": "2023-10-01T00:00:00Z",
-                                    "end_date_of_work": "2023-12-31T00:00:00Z"
-                                }
-                            """
-
-                    ) { response ->
-                        response?.body?.let { Log.i("BOH", it.string()) }
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        ) {
-            Text("Test POST")
-        }
 
         // Show a list of scanned devices
         Text("Dispositivi trovati:", fontSize = 20.sp, modifier = Modifier.padding(bottom = 8.dp))

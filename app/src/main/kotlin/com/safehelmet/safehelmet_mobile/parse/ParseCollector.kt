@@ -61,7 +61,7 @@ object ParseCollector {
 
     private fun sendDataToBackend() {
         HttpClient.postRequest(
-            "https://safehelmet-backend.onrender.com/api/v1/worksites",
+            "/api/v1/worksites",
             createReadingJson()
         ) { response ->
             response?.body?.let { Log.i("ParseCollector", it.string()) }
