@@ -8,7 +8,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 
 
-class HttpClient {
+object HttpClient {
 
     private val client = OkHttpClient()
     private val authToken = BuildConfig.API_TOKEN // Sostituisci con il tuo token di autorizzazione

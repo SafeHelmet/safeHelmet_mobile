@@ -2,7 +2,7 @@ package com.safehelmet.safehelmet_mobile.parse
 
 class ParseSleep(byteArray: ByteArray) : BaseParse(byteArray) {
 
-    var sleep: BooleanArray = BooleanArray(1) { false }
+    var sleep: Boolean = false
 
     override val sensorLengths: Map<String, Int> = mapOf(
         "sleep" to 1
@@ -15,12 +15,12 @@ class ParseSleep(byteArray: ByteArray) : BaseParse(byteArray) {
     private fun parseSensors() {
         val offset = intArrayOf(0)
 
-        sleep = extractBitsSensor("sleep", 0, 0, offset) // Firsts 5 bit
+        sleep = extractBitsSensor("sleep", 0, 0, offset)[0]
     }
 
     override fun printValues(): String {
         return buildString {
-            for (w in sleep) append(if (w) "1" else "0")
+            "sleep ${sleep}"
         }
     }
 }

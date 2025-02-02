@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.safehelmet.safehelmet_mobile.parse.BaseParse
+import com.safehelmet.safehelmet_mobile.parse.ParseCollector
 import com.safehelmet.safehelmet_mobile.parse.ParseCrash1
 import com.safehelmet.safehelmet_mobile.parse.ParseCrash2
 import com.safehelmet.safehelmet_mobile.parse.ParseData
@@ -102,7 +103,6 @@ class BleCallbackHandler(private val context: Context) : BluetoothGattCallback()
     ) {
         super.onCharacteristicChanged(gatt, characteristic, value)
 
-
         val parseValue: BaseParse? = when (characteristic.descriptors[1].uuid) {
             uuidFrom16Bit(0x0044) -> ParseData(value)
             uuidFrom16Bit(0x4331) -> ParseCrash1(value)
@@ -110,6 +110,7 @@ class BleCallbackHandler(private val context: Context) : BluetoothGattCallback()
             uuidFrom16Bit(0x0053) -> ParseSleep(value)
             else -> null
         }
+        ParseCollector.processParse(parseValue)
 
         parseValue?.let { Log.i("BluetoothManager", it.printValues()) }
     }

@@ -130,13 +130,12 @@ fun NonConnectedScreen(
             Text("Stop Scanning", fontSize = 18.sp)
         }
 
-        val apiClient = remember { HttpClient() }
 
         // Esegui la chiamata API quando il pulsante viene premuto
         Button(
             onClick = {
                 CoroutineScope(Dispatchers.IO).launch {
-                    apiClient.getRequest(
+                    HttpClient.getRequest(
                         "https://safehelmet-backend.onrender.com/api/v1/workers",
                     ) { response ->
                         response?.body?.let { Log.i("BOH", it.string()) }
@@ -153,7 +152,7 @@ fun NonConnectedScreen(
         Button(
             onClick = {
                 CoroutineScope(Dispatchers.IO).launch {
-                    apiClient.postRequest(
+                    HttpClient.postRequest(
                         "https://safehelmet-backend.onrender.com/api/v1/worksites",
                         """
                                 {
