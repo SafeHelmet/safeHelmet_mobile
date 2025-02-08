@@ -199,11 +199,15 @@ class BleManager(private val context: Context) {
             if (ActivityCompat.checkSelfPermission(
                     context,
                     Manifest.permission.BLUETOOTH_CONNECT
-                ) != PackageManager.PERMISSION_GRANTED
+                ) == PackageManager.PERMISSION_GRANTED
             ) {
                 gatt!!.disconnect()
+                Log.i("BluetoothManager", "Disconnect called.")
                 gatt!!.close()
+                Log.i("BluetoothManager", "GATT connection closed.")
                 gatt = null
+            } else {
+                Log.e("BluetoothManager", "BLUETOOTH_CONNECT permission not granted.")
             }
         } else {
             Log.e("BluetoothManager", "No active connection found for the device.")
