@@ -31,6 +31,7 @@ import androidx.lifecycle.lifecycleScope
 import com.safehelmet.safehelmet_mobile.api.HttpClient
 import com.safehelmet.safehelmet_mobile.ble.BleDevice
 import com.safehelmet.safehelmet_mobile.ble.BleManager
+import com.safehelmet.safehelmet_mobile.parse.ParseCollector
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -78,7 +79,7 @@ class MainActivity : ComponentActivity() {
                         if (loginSuccessful) {
                             isLogin.value = true
                         }else{
-                            //isLogin.value = true
+                            isLogin.value = true
                             Toast.makeText(this@MainActivity, "Not a valid login", Toast.LENGTH_LONG).show()
                         }
                     }
@@ -90,13 +91,7 @@ class MainActivity : ComponentActivity() {
     }
 
 
-
-
-
 }
-
-
-
 
 enum class ConnectionState {
     NON_CONNECTED,
@@ -201,6 +196,7 @@ fun ConnectedScreen(
     bleManager: BleManager,
     onDisconnectButtonClick: () -> Unit
 ) {
+    val data by ParseCollector.state
 
     Column(
         modifier = Modifier
@@ -213,17 +209,29 @@ fun ConnectedScreen(
             fontSize = 24.sp,
             modifier = Modifier.padding(bottom = 16.dp)
         )
+
+        Text(
+            text = data,
+            fontSize = 16.sp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        )
+
         Button(
-            onClick = { onDisconnectButtonClick(); bleManager.disconnectFromPeripheral() },
+            onClick = {
+                onDisconnectButtonClick()
+                bleManager.disconnectFromPeripheral()
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp)
         ) {
             Text("Disconnetti", fontSize = 18.sp)
         }
-
     }
 }
+
 
 
 @Composable
