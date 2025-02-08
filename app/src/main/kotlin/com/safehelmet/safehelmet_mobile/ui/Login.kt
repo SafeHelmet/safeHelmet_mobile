@@ -22,11 +22,12 @@ import androidx.compose.ui.unit.dp
 import com.safehelmet.safehelmet_mobile.api.HttpClient
 
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.json.JSONObject
 import kotlin.coroutines.resume
 
 @Composable
 fun LoginScreen(onLogin: (String, String) -> Unit) {
-    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
 
@@ -36,9 +37,9 @@ fun LoginScreen(onLogin: (String, String) -> Unit) {
             .padding(16.dp), verticalArrangement = Arrangement.Center
     ) {
         TextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Username") },
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("email") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -56,7 +57,7 @@ fun LoginScreen(onLogin: (String, String) -> Unit) {
 
         Button(
             onClick = {
-                onLogin(username, password)
+                onLogin(email, password)
             }, modifier = Modifier.fillMaxWidth()
         ) {
             Text("Login")
@@ -65,13 +66,18 @@ fun LoginScreen(onLogin: (String, String) -> Unit) {
 }
 
 // Funzione di login asincrona
-suspend fun login(username: String, password: String): Boolean {
+suspend fun login(email: String, password: String): Boolean {
     return suspendCancellableCoroutine { continuation ->
         Log.i("Login", "Start Login Request")
 
+        val json = JSONObject()
+        json.put("email", email)
+        json.put("password", password)
+
+
         // Esegui la richiesta HTTP in modo asincrono
         HttpClient.postRequest(
-            "/api/v1/login", "username=$username&password=$password"
+            "/api/v1/login", json.toString()
         ) { response ->
             Log.i("Login", "Response received: ${response?.isSuccessful}")
 
