@@ -64,6 +64,7 @@ class BleCallbackHandler(private val context: Context) : BluetoothGattCallback()
 
             android.bluetooth.BluetoothProfile.STATE_DISCONNECTED -> {
                 Log.i("BluetoothManager", "Disconnected from ${gatt.device.address}")
+                gatt.close()
             }
         }
     }

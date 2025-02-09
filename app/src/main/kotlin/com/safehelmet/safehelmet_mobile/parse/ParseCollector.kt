@@ -1,8 +1,10 @@
 package com.safehelmet.safehelmet_mobile.parse
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import com.safehelmet.safehelmet_mobile.api.HttpClient
 import org.json.JSONObject
+import kotlin.math.log
 
 object ParseCollector {
 
@@ -10,6 +12,9 @@ object ParseCollector {
     private var parseCrash1: ParseCrash1? = null
     private var parseCrash2: ParseCrash2? = null
     private var parseSleep: ParseSleep? = null
+
+    var state = mutableStateOf("")
+        private set
 
     fun processParse(parse: BaseParse?) {
 
@@ -20,10 +25,14 @@ object ParseCollector {
             is ParseSleep -> parseSleep = parse
         }
 
-        if (allValuesCollected() && parseSleep?.sleep == false) {
+        if (allValuesCollected() && (parseSleep?.sleep == false || parseSleep?.sleep == null )) {
             sendDataToBackend()
+            // Aggiorna lo stato ogni volta che vengono modificati i dati
+            state.value = createReadingJson()
             resetValues()
         }
+
+
     }
 
     private fun allValuesCollected(): Boolean {
