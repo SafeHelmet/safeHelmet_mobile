@@ -5,8 +5,8 @@ class ParseData(byteArray: ByteArray) : BaseParse(byteArray) {
     var temp: Float = 0.0F
     var hum: Float = 0.0F
     var lux: Float = 0.0F
-    var gas: BooleanArray = BooleanArray(3) { false } // 3 bit
-    var wearables: BooleanArray = BooleanArray(2) { false } // 5 bit
+    var gas: BooleanArray = BooleanArray(3) { false }
+    var wearables: BooleanArray = BooleanArray(2) { false }
 
     override val sensorLengths: Map<String, Int> = mapOf(
         "temp" to 4,
