@@ -19,7 +19,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -38,15 +40,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import com.safehelmet.safehelmet_mobile.api.HttpClient
 import com.safehelmet.safehelmet_mobile.ble.BleDevice
 import com.safehelmet.safehelmet_mobile.ble.BleManager
 import com.safehelmet.safehelmet_mobile.parse.ParseCollector
 import com.safehelmet.safehelmet_mobile.ui.theme.Purple40
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import login
+import org.json.JSONException
+import org.json.JSONObject
 
 
 class MainActivity : ComponentActivity() {
@@ -90,7 +91,7 @@ class MainActivity : ComponentActivity() {
                         if (loginSuccessful) {
                             isLogin.value = true
                         }else{
-                            isLogin.value = true
+                            //isLogin.value = true
                             Toast.makeText(this@MainActivity, "Not a valid login", Toast.LENGTH_LONG).show()
                         }
                     }
@@ -205,40 +206,195 @@ fun ConnectedScreen(
     onDisconnectButtonClick: () -> Unit
 ) {
     val data by ParseCollector.state
+    val jsonMap = remember(data) { parseJsonToMap(data) }
+
+    val usesGasProtection = jsonMap["uses_gas_protection"]?.toBoolean() ?: false
+    val usesWeldingProtection = jsonMap["uses_welding_protection"]?.toBoolean() ?: false
+
+    val groupedData = remember(jsonMap) { groupData(jsonMap) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            "Sei connesso al dispositivo!",
-            fontSize = 24.sp,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        Text(
-            text = data,
-            fontSize = 16.sp,
+        // Top Section (Protections and Title)
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        )
-
-        Button(
-            onClick = {
-                onDisconnectButtonClick()
-                bleManager.disconnectFromPeripheral()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
+                .weight(0.1f) // Adjust weight as needed
         ) {
-            Text("Disconnetti", fontSize = 18.sp)
+            Text(
+                "Sei connesso al dispositivo!",
+                fontSize = 15.sp,
+                modifier = Modifier.padding(bottom = 10.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                ProtectionStatusLabel(label = "Gas Protection", isActive = usesGasProtection)
+                ProtectionStatusLabel(label = "Welding Protection", isActive = usesWeldingProtection)
+            }
+        }
+
+        // Middle Section (Grouped Data Cards)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = true)
+                .verticalScroll(rememberScrollState()) // Correct way to add vertical scrolling
+        ) {
+            // Gas Data Group
+            GroupedDataCard(title = "Gas Rilevati", fields = groupedData["gas"] ?: emptyList())
+            Spacer(modifier = Modifier.height(8.dp)) // Spacing between cards
+
+            // Standard Values Group
+            GroupedDataCard(title = "Standard Values", fields = groupedData["std_"] ?: emptyList())
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Average Values Group
+            GroupedDataCard(title = "Average Values", fields = groupedData["avg_"] ?: emptyList())
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Other Data Group
+            GroupedDataCard(title = "Other Data", fields = groupedData["other"] ?: emptyList())
+        }
+
+
+        // Bottom Section (Disconnect Button)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.1f) // Adjust weight as needed
+        ) {
+            Button(
+                onClick = {
+                    onDisconnectButtonClick()
+                    bleManager.disconnectFromPeripheral()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Text("Disconnetti", fontSize = 18.sp)
+            }
         }
     }
 }
+
+
+@Composable
+fun GroupedDataCard(title: String, fields: List<Map.Entry<String, String>>) {
+    if (fields.isNotEmpty()) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp) // Elevation for the bigger card
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = title,
+                    fontSize = 20.sp,
+                    color = Purple40,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                fields.forEach { entry ->
+                    FieldItem(key = entry.key, value = entry.value)
+                }
+            }
+        }
+    }
+}
+
+
+
+@Composable
+fun FieldItem(key: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp), // Reduced vertical padding
+        verticalAlignment = Alignment.CenterVertically // Align items vertically in the row
+    ) {
+        Text(
+            text = key + ":", // Added colon for better readability
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = Purple40,
+            modifier = Modifier.weight(0.4f) // Key takes 40% of the width
+        )
+        Text(
+            text = value,
+            fontSize = 14.sp,
+            color = Color.Gray,
+            modifier = Modifier.weight(0.6f) // Value takes 60% of the width
+        )
+    }
+}
+
+// Funzione che analizza il JSON e lo raggruppa in base ai prefissi
+fun groupData(jsonMap: Map<String, String>): Map<String, List<Map.Entry<String, String>>> {
+    val grouped = mutableMapOf<String, MutableList<Map.Entry<String, String>>>()
+
+    jsonMap.forEach { entry ->
+        when {
+            entry.key.startsWith("std_") -> {
+                grouped.getOrPut("std_") { mutableListOf() }.add(entry)
+            }
+            entry.key.startsWith("avg_") -> {
+                grouped.getOrPut("avg_") { mutableListOf() }.add(entry)
+            }
+            entry.key == "methane" || entry.key == "carbon_monoxide" || entry.key == "smoke_detection" -> {
+                grouped.getOrPut("gas") { mutableListOf() }.add(entry)
+            }
+            else -> {
+                grouped.getOrPut("other") { mutableListOf() }.add(entry)
+            }
+        }
+    }
+
+    return grouped
+}
+
+@Composable
+fun ProtectionStatusLabel(label: String, isActive: Boolean) {
+    Row(
+        //modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            fontSize = 16.sp,
+            color = Color.Black,
+            modifier = Modifier.align(Alignment.CenterVertically)
+        )
+        Text(
+            text = if (isActive) "Attivo" else "Non Attivo",
+            fontSize = 16.sp,
+            color = if (isActive) Color.Green else Color.Red,
+            modifier = Modifier.align(Alignment.CenterVertically)
+        )
+    }
+}
+
+
+// Funzione che analizza il JSON e lo trasforma in una mappa di chiavi e valori
+fun parseJsonToMap(json: String): Map<String, String> {
+    // Usa una libreria come Gson o Moshi per fare il parsing del JSON
+    // Qui usiamo un formato fittizio per l'esempio
+    return try {
+        val jsonObject = JSONObject(json)
+        jsonObject.keys().asSequence().associateWith { jsonObject[it].toString() }
+    } catch (e: JSONException) {
+        emptyMap() // In caso di errore, restituisce una mappa vuota
+    }
+}
+
 
 
 
@@ -247,7 +403,7 @@ fun DeviceItem(device: BleDevice, onConnect: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(10.dp)
             .clickable { onConnect() }, // Permette il tap sull'intera card
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.elevatedCardElevation(6.dp),
@@ -264,12 +420,12 @@ fun DeviceItem(device: BleDevice, onConnect: () -> Unit) {
                     text = device.name ?: "Sconosciuto",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Purple40 // Blu acceso
+                    color = Purple40
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = device.address,
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     color = Color.Gray
                 )
             }
