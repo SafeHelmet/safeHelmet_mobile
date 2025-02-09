@@ -118,6 +118,7 @@ class BleManager(private val context: Context) {
     }
 
     fun startScanning() {
+        scannedDevices.clear()  // Pulisce la lista prima di ogni scansione
         val bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
         if (ActivityCompat.checkSelfPermission(
                 context,
