@@ -91,7 +91,7 @@ class MainActivity : ComponentActivity() {
                         if (loginSuccessful) {
                             isLogin.value = true
                         }else{
-                            //isLogin.value = true
+                            isLogin.value = true
                             Toast.makeText(this@MainActivity, "Not a valid login", Toast.LENGTH_LONG).show()
                         }
                     }
@@ -115,37 +115,39 @@ enum class ConnectionState {
 fun BluetoothScreenWrapper(bleManager: BleManager) {
 
     var connectionState by remember { mutableStateOf(ConnectionState.NON_CONNECTED) }
+    var connectedDeviceName by remember { mutableStateOf<String?>(null) } // Memorizza il nome del dispositivo connesso
     val devices = remember { mutableStateListOf<BleDevice>() }
 
-    // Regex per filtrare i dispositivi il cui nome inizia con "SafeHelmet"
     val safeHelmetRegex = Regex("^SafeHelmet-.*")
 
-    // Imposta la callback di BleManager
     bleManager.onDevicesFound = { foundDevices: Set<BleDevice> ->
         devices.clear()
-        // Filtra i dispositivi il cui nome inizia con "SafeHelmet"
         val filteredDevices = foundDevices.filter { device ->
             device.name?.matches(safeHelmetRegex) == true
         }
-        devices.addAll(filteredDevices) // Aggiunge solo i dispositivi filtrati
+        devices.addAll(filteredDevices)
     }
 
-    // Funzione per aggiornare la lista dei dispositivi
-    val onStartScanning = {
-        devices.clear() // Pulisce la lista prima di ogni scansione
-    }
+    val onStartScanning = { devices.clear() }
 
     when (connectionState) {
         ConnectionState.NON_CONNECTED -> NonConnectedScreen(
             devices = devices,
             bleManager = bleManager,
-            onConnectButtonClick = { connectionState = ConnectionState.CONNECTED },
-            onStartScanning = onStartScanning // Passa la callback per aggiornare la lista
+            onConnectButtonClick = { deviceName ->
+                connectedDeviceName = deviceName // Salva il nome del dispositivo
+                connectionState = ConnectionState.CONNECTED
+            },
+            onStartScanning = onStartScanning
         )
 
         ConnectionState.CONNECTED -> ConnectedScreen(
             bleManager = bleManager,
-            onDisconnectButtonClick = { connectionState = ConnectionState.NON_CONNECTED }
+            connectedDeviceName = connectedDeviceName, // Passa il nome del dispositivo connesso
+            onDisconnectButtonClick = {
+                connectionState = ConnectionState.NON_CONNECTED
+                connectedDeviceName = null // Resetta il nome alla disconnessione
+            }
         )
     }
 }
@@ -154,33 +156,27 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
 fun NonConnectedScreen(
     devices: List<BleDevice>,
     bleManager: BleManager,
-    onConnectButtonClick: () -> Unit,
-    onStartScanning: () -> Unit // Aggiungi questa callback
+    onConnectButtonClick: (String) -> Unit, // Ora accetta il nome del device
+    onStartScanning: () -> Unit
 ) {
     Column(modifier = Modifier.padding(16.dp)) {
-        // Buttons for starting and stopping scanning
         Button(
             onClick = {
                 bleManager.startScanning()
-                onStartScanning() // Chiama la callback per aggiornare la lista
+                onStartScanning()
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
         ) {
             Text("Start Scanning", fontSize = 18.sp)
         }
 
         Button(
             onClick = { bleManager.stopScanning() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
         ) {
             Text("Stop Scanning", fontSize = 18.sp)
         }
 
-        // Show a list of scanned devices
         Text("Dispositivi trovati:", fontSize = 20.sp, modifier = Modifier.padding(bottom = 8.dp))
 
         LazyColumn(
@@ -192,7 +188,7 @@ fun NonConnectedScreen(
                     device = device,
                     onConnect = {
                         bleManager.connectToPeripheral(device.address)
-                        onConnectButtonClick()
+                        onConnectButtonClick(device.name ?: "Sconosciuto") // Passa il nome del device
                     }
                 )
             }
@@ -203,31 +199,27 @@ fun NonConnectedScreen(
 @Composable
 fun ConnectedScreen(
     bleManager: BleManager,
+    connectedDeviceName: String?, // Riceve il nome del dispositivo
     onDisconnectButtonClick: () -> Unit
 ) {
     val data by ParseCollector.state
     val jsonMap = remember(data) { parseJsonToMap(data) }
-
     val usesGasProtection = jsonMap["uses_gas_protection"]?.toBoolean() ?: false
     val usesWeldingProtection = jsonMap["uses_welding_protection"]?.toBoolean() ?: false
 
     val groupedData = remember(jsonMap) { groupData(jsonMap) }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Top Section (Protections and Title)
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.1f) // Adjust weight as needed
+            modifier = Modifier.fillMaxWidth().weight(0.2f)
         ) {
             Text(
-                "Sei connesso al dispositivo!",
-                fontSize = 15.sp,
+                "Connected to: ${connectedDeviceName ?: "Unknown device"}", // Mostra il nome
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 10.dp)
             )
 
@@ -235,49 +227,38 @@ fun ConnectedScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                ProtectionStatusLabel(label = "Gas Protection", isActive = usesGasProtection)
-                ProtectionStatusLabel(label = "Welding Protection", isActive = usesWeldingProtection)
+                ProtectionStatusLabel(label = "Gas Protection: ", isActive = usesGasProtection)
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                ProtectionStatusLabel(label = "Welding Protection: ", isActive = usesWeldingProtection)
             }
         }
 
-        // Middle Section (Grouped Data Cards)
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f, fill = true)
-                .verticalScroll(rememberScrollState()) // Correct way to add vertical scrolling
+            modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState())
         ) {
-            // Gas Data Group
-            GroupedDataCard(title = "Gas Rilevati", fields = groupedData["gas"] ?: emptyList())
-            Spacer(modifier = Modifier.height(8.dp)) // Spacing between cards
-
-            // Standard Values Group
-            GroupedDataCard(title = "Standard Values", fields = groupedData["std_"] ?: emptyList())
+            GroupedDataCard(title = "Gas/smoke presence", fields = groupedData["gas"] ?: emptyList())
             Spacer(modifier = Modifier.height(8.dp))
-
-            // Average Values Group
-            GroupedDataCard(title = "Average Values", fields = groupedData["avg_"] ?: emptyList())
+            GroupedDataCard(title = "Standard deviation accelerometer values", fields = groupedData["std_"] ?: emptyList())
             Spacer(modifier = Modifier.height(8.dp))
-
-            // Other Data Group
+            GroupedDataCard(title = "Mean Average accelerometer Values", fields = groupedData["avg_"] ?: emptyList())
+            Spacer(modifier = Modifier.height(8.dp))
             GroupedDataCard(title = "Other Data", fields = groupedData["other"] ?: emptyList())
         }
 
-
-        // Bottom Section (Disconnect Button)
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.1f) // Adjust weight as needed
+            modifier = Modifier.fillMaxWidth().weight(0.1f)
         ) {
             Button(
                 onClick = {
                     onDisconnectButtonClick()
                     bleManager.disconnectFromPeripheral()
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
+                modifier = Modifier.fillMaxWidth().height(48.dp)
             ) {
                 Text("Disconnetti", fontSize = 18.sp)
             }
@@ -374,7 +355,7 @@ fun ProtectionStatusLabel(label: String, isActive: Boolean) {
             modifier = Modifier.align(Alignment.CenterVertically)
         )
         Text(
-            text = if (isActive) "Attivo" else "Non Attivo",
+            text = if (isActive) "Active" else "Not plugged in",
             fontSize = 16.sp,
             color = if (isActive) Color.Green else Color.Red,
             modifier = Modifier.align(Alignment.CenterVertically)
