@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -26,6 +27,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,6 +51,7 @@ import com.safehelmet.safehelmet_mobile.parse.ParseCollector
 import com.safehelmet.safehelmet_mobile.ui.theme.Purple40
 import kotlinx.coroutines.launch
 import login
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -238,8 +243,32 @@ fun NonConnectedScreen(
 
 @Composable
 fun SettingsScreen(
-    onBack: () -> Unit // Callback per tornare indietro
+    onBack: () -> Unit
 ) {
+    var worksites by remember { mutableStateOf<List<String>>(emptyList()) }
+    var selectedWorksite by remember { mutableStateOf<String?>(null) }
+    var expanded by remember { mutableStateOf(false) }
+    val worksiteMap = mutableMapOf<Int, String>()
+
+    // Ottieni i cantieri dall'API
+    Context.workerID = "22"
+    HttpClient.getRequest("/api/v1/workers/${Context.workerID}/worksite") { response ->
+        response?.body?.string()?.let { responseBody ->
+            val jsonResponse = JSONObject(responseBody) // Analizza la risposta come JSONObject
+            val worksiteArray = jsonResponse.getJSONArray("worksites") // Ottieni l'array "worksites"
+
+            for (i in 0 until worksiteArray.length()) {
+                val worksite = worksiteArray.getJSONObject(i)
+                val id = worksite.getInt("id")
+                val name = worksite.getString("name")
+                worksiteMap[id] = name // Aggiungi la coppia ID -> Name al dizionario
+            }
+
+            // Aggiorna la lista worksites
+            worksites = worksiteMap.values.toList() // Converto i valori della mappa in lista
+        }
+    }
+
     Column(modifier = Modifier.padding(16.dp)) {
         Button(
             onClick = onBack,
@@ -251,7 +280,33 @@ fun SettingsScreen(
         }
 
         Text("Impostazioni", fontSize = 24.sp, modifier = Modifier.padding(bottom = 16.dp))
-        // Aggiungi qui altri componenti per le impostazioni...
+
+        // Label
+        Text("Select worksite:", fontSize = 18.sp, modifier = Modifier.padding(bottom = 8.dp))
+
+        Box {
+            OutlinedButton(
+                onClick = { expanded = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(selectedWorksite ?: "Choose a worksite")
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                worksites.forEach { worksite ->
+                    DropdownMenuItem(
+                        text = { Text(worksite) },
+                        onClick = {
+                            selectedWorksite = worksite
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
     }
 }
 
