@@ -40,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
+import com.safehelmet.safehelmet_mobile.api.HttpClient
 import com.safehelmet.safehelmet_mobile.ble.BleDevice
 import com.safehelmet.safehelmet_mobile.ble.BleManager
 import com.safehelmet.safehelmet_mobile.parse.ParseCollector
@@ -91,7 +92,11 @@ class MainActivity : ComponentActivity() {
                             isLogin.value = true
                         } else {
                             isLogin.value = true
-                            Toast.makeText(this@MainActivity, "Not a valid login", Toast.LENGTH_LONG).show()
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Not a valid login",
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
                     }
                 }
@@ -151,7 +156,9 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
                     connectionState = ConnectionState.CONNECTED
                 },
                 onStartScanning = onStartScanning,
-                onNavigateToSettings = { currentScreen = Screen.SETTINGS } // Callback per navigare a Settings
+                onNavigateToSettings = {
+                    currentScreen = Screen.SETTINGS
+                } // Callback per navigare a Settings
             )
 
             Screen.SETTINGS -> SettingsScreen(
@@ -173,7 +180,9 @@ fun NonConnectedScreen(
         // Pulsante Settings
         Button(
             onClick = onNavigateToSettings,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
         ) {
             Text("Settings", fontSize = 18.sp)
         }
@@ -183,14 +192,18 @@ fun NonConnectedScreen(
                 bleManager.startScanning()
                 onStartScanning()
             },
-            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
         ) {
             Text("Start Scanning", fontSize = 18.sp)
         }
 
         Button(
             onClick = { bleManager.stopScanning() },
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
         ) {
             Text("Stop Scanning", fontSize = 18.sp)
         }
@@ -206,7 +219,16 @@ fun NonConnectedScreen(
                     device = device,
                     onConnect = {
                         bleManager.connectToPeripheral(device.address)
-                        onConnectButtonClick(device.name ?: "Sconosciuto") // Passa il nome del device
+                        onConnectButtonClick(
+                            device.name ?: "Sconosciuto"
+                        ) // Passa il nome del device
+                        HttpClient.getRequest(
+                            "api/v1/helmets/mac-address/${device.address}"
+                        ) { response ->
+                            val jsonResponse = JSONObject(response?.body?.string().toString())
+                            Context.helmetID =
+                                jsonResponse.getJSONObject("helmet_id").getString("id")
+                        }
                     }
                 )
             }
@@ -221,7 +243,9 @@ fun SettingsScreen(
     Column(modifier = Modifier.padding(16.dp)) {
         Button(
             onClick = onBack,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
         ) {
             Text("Back", fontSize = 18.sp)
         }
@@ -245,11 +269,15 @@ fun ConnectedScreen(
     val groupedData = remember(jsonMap) { groupData(jsonMap) }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().weight(0.2f)
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.2f)
         ) {
             Text(
                 "Connected to: ${connectedDeviceName ?: "Unknown device"}",
@@ -269,31 +297,50 @@ fun ConnectedScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                ProtectionStatusLabel(label = "Welding Protection: ", isActive = usesWeldingProtection)
+                ProtectionStatusLabel(
+                    label = "Welding Protection: ",
+                    isActive = usesWeldingProtection
+                )
             }
         }
 
         Column(
-            modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState())
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
         ) {
-            GroupedDataCard(title = "Gas/smoke presence", fields = groupedData["gas"] ?: emptyList())
+            GroupedDataCard(
+                title = "Gas/smoke presence",
+                fields = groupedData["gas"] ?: emptyList()
+            )
             Spacer(modifier = Modifier.height(8.dp))
-            GroupedDataCard(title = "Standard deviation accelerometer values", fields = groupedData["std_"] ?: emptyList())
+            GroupedDataCard(
+                title = "Standard deviation accelerometer values",
+                fields = groupedData["std_"] ?: emptyList()
+            )
             Spacer(modifier = Modifier.height(8.dp))
-            GroupedDataCard(title = "Mean Average accelerometer Values", fields = groupedData["avg_"] ?: emptyList())
+            GroupedDataCard(
+                title = "Mean Average accelerometer Values",
+                fields = groupedData["avg_"] ?: emptyList()
+            )
             Spacer(modifier = Modifier.height(8.dp))
             GroupedDataCard(title = "Other Data", fields = groupedData["other"] ?: emptyList())
         }
 
         Column(
-            modifier = Modifier.fillMaxWidth().weight(0.1f)
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.1f)
         ) {
             Button(
                 onClick = {
                     onDisconnectButtonClick()
                     bleManager.disconnectFromPeripheral()
                 },
-                modifier = Modifier.fillMaxWidth().height(48.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
             ) {
                 Text("Disconnetti", fontSize = 18.sp)
             }
@@ -326,7 +373,6 @@ fun GroupedDataCard(title: String, fields: List<Map.Entry<String, String>>) {
         }
     }
 }
-
 
 
 @Composable
@@ -362,12 +408,15 @@ fun groupData(jsonMap: Map<String, String>): Map<String, List<Map.Entry<String, 
             entry.key.startsWith("std_") -> {
                 grouped.getOrPut("std_") { mutableListOf() }.add(entry)
             }
+
             entry.key.startsWith("avg_") -> {
                 grouped.getOrPut("avg_") { mutableListOf() }.add(entry)
             }
+
             entry.key == "methane" || entry.key == "carbon_monoxide" || entry.key == "smoke_detection" -> {
                 grouped.getOrPut("gas") { mutableListOf() }.add(entry)
             }
+
             else -> {
                 grouped.getOrPut("other") { mutableListOf() }.add(entry)
             }
@@ -410,8 +459,6 @@ fun parseJsonToMap(json: String): Map<String, String> {
         emptyMap() // In caso di errore, restituisce una mappa vuota
     }
 }
-
-
 
 
 @Composable
