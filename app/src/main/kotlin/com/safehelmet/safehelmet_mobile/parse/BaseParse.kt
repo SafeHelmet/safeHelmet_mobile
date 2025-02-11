@@ -25,14 +25,12 @@ abstract class BaseParse(private val byteArray: ByteArray) {
 
         val result = BooleanArray(toBit - fromBit + 1)
         for (i in fromBit..toBit) {
-            val bit = (byte.toInt() shr (7 - i)) and 1  // shift inverso
-//            val bit = (byte.toInt() shr i) and 1
+            val bit = (byte.toInt() shr i) and 1
             result[i - fromBit] = bit == 1
         }
 
         return result
     }
-
 
     private fun ByteArray.toFloat(): Float {
         if (this.size != 4) return 0.0f

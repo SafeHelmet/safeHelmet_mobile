@@ -26,7 +26,7 @@ object ParseCollector {
         }
 
         if (allValuesCollected() && (parseSleep?.sleep == false || parseSleep?.sleep == null )) {
-            sendDataToBackend()
+            //sendDataToBackend()
             // Aggiorna lo stato ogni volta che vengono modificati i dati
             state.value = createReadingJson()
             resetValues()
