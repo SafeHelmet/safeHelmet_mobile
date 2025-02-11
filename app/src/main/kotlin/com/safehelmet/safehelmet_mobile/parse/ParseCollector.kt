@@ -70,7 +70,7 @@ object ParseCollector {
 
     private fun sendDataToBackend() {
         HttpClient.postRequest(
-            "/api/v1/worksites",
+            "/api/v1/readings",
             createReadingJson()
         ) { response ->
             response?.body?.let { Log.i("ParseCollector", it.string()) }
