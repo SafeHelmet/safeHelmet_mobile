@@ -49,7 +49,6 @@ import login
 import org.json.JSONException
 import org.json.JSONObject
 
-
 class MainActivity : ComponentActivity() {
     var isLogin = mutableStateOf(false)
     private lateinit var bleManager: BleManager
@@ -90,7 +89,7 @@ class MainActivity : ComponentActivity() {
 
                         if (loginSuccessful) {
                             isLogin.value = true
-                        }else{
+                        } else {
                             isLogin.value = true
                             Toast.makeText(this@MainActivity, "Not a valid login", Toast.LENGTH_LONG).show()
                         }
@@ -101,8 +100,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-
 }
 
 enum class ConnectionState {
@@ -110,12 +107,15 @@ enum class ConnectionState {
     CONNECTED
 }
 
+enum class Screen {
+    NON_CONNECTED, SETTINGS
+}
 
 @Composable
 fun BluetoothScreenWrapper(bleManager: BleManager) {
-
     var connectionState by remember { mutableStateOf(ConnectionState.NON_CONNECTED) }
-    var connectedDeviceName by remember { mutableStateOf<String?>(null) } // Memorizza il nome del dispositivo connesso
+    var connectedDeviceName by remember { mutableStateOf<String?>(null) }
+    var currentScreen by remember { mutableStateOf(Screen.NON_CONNECTED) } // Stato per la navigazione
     val devices = remember { mutableStateListOf<BleDevice>() }
 
     val safeHelmetRegex = Regex("^SafeHelmet-.*")
@@ -130,25 +130,34 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
 
     val onStartScanning = { devices.clear() }
 
-    when (connectionState) {
-        ConnectionState.NON_CONNECTED -> NonConnectedScreen(
-            devices = devices,
+    // Se siamo connessi, mostriamo sempre la ConnectedScreen
+    if (connectionState == ConnectionState.CONNECTED) {
+        ConnectedScreen(
             bleManager = bleManager,
-            onConnectButtonClick = { deviceName ->
-                connectedDeviceName = deviceName // Salva il nome del dispositivo
-                connectionState = ConnectionState.CONNECTED
-            },
-            onStartScanning = onStartScanning
-        )
-
-        ConnectionState.CONNECTED -> ConnectedScreen(
-            bleManager = bleManager,
-            connectedDeviceName = connectedDeviceName, // Passa il nome del dispositivo connesso
+            connectedDeviceName = connectedDeviceName,
             onDisconnectButtonClick = {
                 connectionState = ConnectionState.NON_CONNECTED
-                connectedDeviceName = null // Resetta il nome alla disconnessione
+                connectedDeviceName = null
             }
         )
+    } else {
+        // Altrimenti, gestiamo la navigazione tra NON_CONNECTED e SETTINGS
+        when (currentScreen) {
+            Screen.NON_CONNECTED -> NonConnectedScreen(
+                devices = devices,
+                bleManager = bleManager,
+                onConnectButtonClick = { deviceName ->
+                    connectedDeviceName = deviceName
+                    connectionState = ConnectionState.CONNECTED
+                },
+                onStartScanning = onStartScanning,
+                onNavigateToSettings = { currentScreen = Screen.SETTINGS } // Callback per navigare a Settings
+            )
+
+            Screen.SETTINGS -> SettingsScreen(
+                onBack = { currentScreen = Screen.NON_CONNECTED } // Callback per tornare indietro
+            )
+        }
     }
 }
 
@@ -156,10 +165,19 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
 fun NonConnectedScreen(
     devices: List<BleDevice>,
     bleManager: BleManager,
-    onConnectButtonClick: (String) -> Unit, // Ora accetta il nome del device
-    onStartScanning: () -> Unit
+    onConnectButtonClick: (String) -> Unit,
+    onStartScanning: () -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     Column(modifier = Modifier.padding(16.dp)) {
+        // Pulsante Settings
+        Button(
+            onClick = onNavigateToSettings,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+        ) {
+            Text("Settings", fontSize = 18.sp)
+        }
+
         Button(
             onClick = {
                 bleManager.startScanning()
@@ -197,9 +215,26 @@ fun NonConnectedScreen(
 }
 
 @Composable
+fun SettingsScreen(
+    onBack: () -> Unit // Callback per tornare indietro
+) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Button(
+            onClick = onBack,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+        ) {
+            Text("Back", fontSize = 18.sp)
+        }
+
+        Text("Impostazioni", fontSize = 24.sp, modifier = Modifier.padding(bottom = 16.dp))
+        // Aggiungi qui altri componenti per le impostazioni...
+    }
+}
+
+@Composable
 fun ConnectedScreen(
     bleManager: BleManager,
-    connectedDeviceName: String?, // Riceve il nome del dispositivo
+    connectedDeviceName: String?,
     onDisconnectButtonClick: () -> Unit
 ) {
     val data by ParseCollector.state
@@ -217,7 +252,7 @@ fun ConnectedScreen(
             modifier = Modifier.fillMaxWidth().weight(0.2f)
         ) {
             Text(
-                "Connected to: ${connectedDeviceName ?: "Unknown device"}", // Mostra il nome
+                "Connected to: ${connectedDeviceName ?: "Unknown device"}",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 10.dp)
