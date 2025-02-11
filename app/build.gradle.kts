@@ -75,4 +75,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.okhttp)
     implementation(libs.dotenv.kotlin)
+    implementation(libs.androidx.work.runtime.ktx)
 }
