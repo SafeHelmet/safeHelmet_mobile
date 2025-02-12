@@ -1,6 +1,6 @@
 package com.safehelmet.safehelmet_mobile
 
-object Context {
+object BackendValues {
     var worksiteID: String? = ""
     var workerID: String? = ""
     var helmetID: String? = ""

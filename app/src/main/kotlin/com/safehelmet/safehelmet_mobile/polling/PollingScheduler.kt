@@ -1,14 +1,50 @@
 package com.safehelmet.safehelmet_mobile.polling
 
-import kotlinx.coroutines.*
+import android.content.Context
+import android.util.Log
+import androidx.work.Worker
+import androidx.work.WorkerParameters
+import com.safehelmet.safehelmet_mobile.api.HttpClient
+import org.json.JSONObject
+import com.safehelmet.safehelmet_mobile.BackendValues as appContext
+import com.safehelmet.safehelmet_mobile.ble.BleManager
 
-class PollingScheduler {
-    fun CoroutineScope.startInfiniteScheduler(interval: Long = 1000L, task: suspend () -> Unit): Job {
-        return launch {
-            while (isActive) {
-                task()
-                delay(interval)
+class PollingScheduler(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
+
+    override fun doWork(): Result {
+        try {
+
+            Log.i("com.safehelmet.safehelmet_mobile.polling.PollingScheduler", "Polling scheduler started")
+
+            // Prima API: Verifica il valore
+            val shouldAdviseBLEHelmet = isReadingAnomaly()
+
+            // Se il valore è vero, avvisa il caschetto in BLE
+            if (shouldAdviseBLEHelmet) {
+                adviseBLEHelmet()
             }
+
+            return Result.success() // Indica che il lavoro è stato completato con successo
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return Result.retry() // Ritenta se c'è stato un errore
         }
+    }
+
+    private fun isReadingAnomaly(): Boolean {
+        var isAnomaly = false
+        HttpClient.getRequest(
+            "/api/v1/polling/${appContext.helmetID}"
+        ){ response ->
+
+            val r = response?.body?.string()?.let { JSONObject(it) }
+            if( r!= null)
+                isAnomaly = r.getBoolean("anomaly_detected")
+        }
+        return isAnomaly
+    }
+
+    private fun adviseBLEHelmet() {
+//        bleManager.adviseForAnomaly()
     }
 }

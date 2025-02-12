@@ -254,6 +254,9 @@ class BleManager(private val context: Context) {
         }
     }
 
+    fun adviseForAnomaly() {
+        writeCharacteristic("", "1")
+    }
 
     fun writeCharacteristic(characteristicUUID: String, value: String) {
         if (gatt == null) {

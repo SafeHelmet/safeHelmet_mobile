@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.safehelmet.safehelmet_mobile.Context
+import com.safehelmet.safehelmet_mobile.BackendValues
 import com.safehelmet.safehelmet_mobile.api.HttpClient
 
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -84,7 +84,7 @@ suspend fun login(email: String, password: String): Boolean {
 
             if (response?.isSuccessful == true) {
                 val jsonResponse = JSONObject(response.body?.string().toString())
-                Context.workerID = jsonResponse.getJSONObject("user").getString("id")
+                BackendValues.workerID = jsonResponse.getJSONObject("user").getString("id")
                 // Se la risposta è positiva, prosegui e restituisci true
                 continuation.resume(true)
             } else {

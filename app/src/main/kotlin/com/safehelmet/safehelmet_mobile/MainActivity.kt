@@ -1,6 +1,8 @@
 package com.safehelmet.safehelmet_mobile
 
 import LoginScreen
+import com.safehelmet.safehelmet_mobile.polling.PollingScheduler
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -51,7 +53,7 @@ import com.safehelmet.safehelmet_mobile.parse.ParseCollector
 import com.safehelmet.safehelmet_mobile.ui.theme.Purple40
 import kotlinx.coroutines.launch
 import login
-import org.json.JSONArray
+import androidx.work.*
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -78,6 +80,22 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+    private fun scheduleApiWorker(context: Context) {
+        val workRequest = PeriodicWorkRequestBuilder<PollingScheduler>(10, java.util.concurrent.TimeUnit.SECONDS)
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED) // Esegue solo se c'è internet
+                    .build()
+            )
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            "ApiWorkerJob",
+            ExistingPeriodicWorkPolicy.KEEP, // Evita duplicati
+            workRequest
+        )
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -86,6 +104,8 @@ class MainActivity : ComponentActivity() {
         // Initialize the launcher in the BluetoothManager class
         bleManager.initializeBluetoothManager(this, enableBluetoothLauncher, permissionsLauncher)
         bleManager.initializeBluetooth()
+
+        scheduleApiWorker(this)
 
         setContent {
             if (!isLogin.value) {
@@ -231,7 +251,7 @@ fun NonConnectedScreen(
                             "api/v1/helmets/mac-address/${device.address}"
                         ) { response ->
                             val jsonResponse = JSONObject(response?.body?.string().toString())
-                            Context.helmetID =
+                            BackendValues.helmetID =
                                 jsonResponse.getJSONObject("helmet_id").getString("id")
                         }
                     }
@@ -250,7 +270,7 @@ fun SettingsScreen(
     var worksiteMap by remember { mutableStateOf<Map<Int, String>>(emptyMap()) }
 
     // Ottieni i cantieri dall'API
-    HttpClient.getRequest("/api/v1/workers/${Context.workerID}/worksite") { response ->
+    HttpClient.getRequest("/api/v1/workers/${BackendValues.workerID}/worksite") { response ->
         response?.body?.string()?.let { responseBody ->
             val jsonResponse = JSONObject(responseBody) // Analizza la risposta come JSONObject
             val worksiteArray = jsonResponse.getJSONArray("worksites") // Ottieni l'array "worksites"
@@ -299,7 +319,7 @@ fun SettingsScreen(
                         onClick = {
                             selectedWorksite = worksite
                             expanded = false
-                            Context.worksiteID = id.toString()
+                            BackendValues.worksiteID = id.toString()
                         }
                     )
                 }
