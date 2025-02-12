@@ -245,13 +245,11 @@ fun NonConnectedScreen(
 fun SettingsScreen(
     onBack: () -> Unit
 ) {
-    var worksites by remember { mutableStateOf<List<String>>(emptyList()) }
     var selectedWorksite by remember { mutableStateOf<String?>(null) }
     var expanded by remember { mutableStateOf(false) }
-    val worksiteMap = mutableMapOf<Int, String>()
+    var worksiteMap by remember { mutableStateOf<Map<Int, String>>(emptyMap()) }
 
     // Ottieni i cantieri dall'API
-    Context.workerID = "22"
     HttpClient.getRequest("/api/v1/workers/${Context.workerID}/worksite") { response ->
         response?.body?.string()?.let { responseBody ->
             val jsonResponse = JSONObject(responseBody) // Analizza la risposta come JSONObject
@@ -261,11 +259,10 @@ fun SettingsScreen(
                 val worksite = worksiteArray.getJSONObject(i)
                 val id = worksite.getInt("id")
                 val name = worksite.getString("name")
-                worksiteMap[id] = name // Aggiungi la coppia ID -> Name al dizionario
+                worksiteMap = worksiteMap + (id to name) // Aggiungi la coppia ID -> Name al dizionario
             }
 
-            // Aggiorna la lista worksites
-            worksites = worksiteMap.values.toList() // Converto i valori della mappa in lista
+
         }
     }
 
@@ -296,12 +293,13 @@ fun SettingsScreen(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
-                worksites.forEach { worksite ->
+                worksiteMap.forEach { (id, worksite) ->
                     DropdownMenuItem(
                         text = { Text(worksite) },
                         onClick = {
                             selectedWorksite = worksite
                             expanded = false
+                            Context.worksiteID = id.toString()
                         }
                     )
                 }
