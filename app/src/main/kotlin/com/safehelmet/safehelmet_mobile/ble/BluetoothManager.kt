@@ -16,6 +16,9 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
+import android.os.Handler
+import android.os.Looper
+
 data class BleDevice(
     val name: String?,
     val address: String
@@ -91,6 +94,10 @@ class BleManager(private val context: Context) {
         }
     }
 
+    private val lastSeenDevices = mutableMapOf<String, Long>()
+    private val deviceTimeout = 10_000L // 10 secondi di timeout
+    private val handler = Handler(Looper.getMainLooper())
+
     // Shared Callback
     private val scanCallback = object : android.bluetooth.le.ScanCallback() {
         override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult?) {
@@ -104,6 +111,10 @@ class BleManager(private val context: Context) {
                     Log.e("BluetoothManager", "Permissions are missing")
                     return
                 }
+
+                val currentTime = System.currentTimeMillis()
+                lastSeenDevices[device.address] = currentTime // Aggiorna ultimo avvistamento
+
                 peripherals[device.address] = device
                 scannedDevices.add(BleDevice(device.name, device.address))
                 onDevicesFound?.invoke(scannedDevices)
@@ -116,6 +127,34 @@ class BleManager(private val context: Context) {
             Log.e("BluetoothManager", "Error on scan: $errorCode")
         }
     }
+
+    // Metodo per rimuovere i dispositivi non più visibili
+    private val removeTask = object : Runnable {
+        override fun run() {
+            val currentTime = System.currentTimeMillis()
+            val iterator = scannedDevices.iterator()
+
+            while (iterator.hasNext()) {
+                val device = iterator.next()
+                val lastSeen = lastSeenDevices[device.address] ?: continue
+
+                if (currentTime - lastSeen > deviceTimeout) {
+                    iterator.remove()
+                    lastSeenDevices.remove(device.address)
+                    Log.d("BluetoothManager", "Device removed: ${device.name} - ${device.address}")
+                }
+            }
+
+            onDevicesFound?.invoke(scannedDevices) // Aggiorna UI
+            handler.postDelayed(this, 5000) // Controlla ogni 5 secondi
+        }
+    }
+
+    // Avvia il task di pulizia periodico
+    init {
+        handler.postDelayed(removeTask, 5000)
+    }
+
 
     fun startScanning() {
         scannedDevices.clear()  // Pulisce la lista prima di ogni scansione

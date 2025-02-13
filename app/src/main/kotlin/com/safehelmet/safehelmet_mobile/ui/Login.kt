@@ -40,7 +40,7 @@ fun LoginScreen(onLogin: (String, String) -> Unit) {
         TextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("email") },
+            label = { Text("Email") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -81,7 +81,6 @@ suspend fun login(email: String, password: String): Boolean {
             "/api/v1/login", json.toString()
         ) { response ->
             Log.i("Login", "Response received: ${response?.isSuccessful}")
-
             if (response?.isSuccessful == true) {
                 val jsonResponse = JSONObject(response.body?.string().toString())
                 BackendValues.workerID = jsonResponse.getJSONObject("user").getString("id")

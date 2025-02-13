@@ -233,7 +233,7 @@ fun NonConnectedScreen(
             Text("Stop Scanning", fontSize = 18.sp)
         }
 
-        Text("Dispositivi trovati:", fontSize = 20.sp, modifier = Modifier.padding(bottom = 8.dp))
+        Text("Devices found:", fontSize = 20.sp, modifier = Modifier.padding(bottom = 8.dp))
 
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
@@ -247,12 +247,15 @@ fun NonConnectedScreen(
                         onConnectButtonClick(
                             device.name ?: "Sconosciuto"
                         ) // Passa il nome del device
+
+                        val dev = "mac0"
+
                         HttpClient.getRequest(
-                            "api/v1/helmets/mac-address/${device.address}"
+                            "/api/v1/helmets/mac-address/${dev}"  // ${device.address}
                         ) { response ->
                             val jsonResponse = JSONObject(response?.body?.string().toString())
                             BackendValues.helmetID =
-                                jsonResponse.getJSONObject("helmet_id").getString("id")
+                                jsonResponse.getInt("helmet_id").toString()  // jsonResponse.getJSONObject("helmet_id").getString("id")
                         }
                     }
                 )
@@ -296,7 +299,7 @@ fun SettingsScreen(
             Text("Back", fontSize = 18.sp)
         }
 
-        Text("Impostazioni", fontSize = 24.sp, modifier = Modifier.padding(bottom = 16.dp))
+        Text("Settings", fontSize = 24.sp, modifier = Modifier.padding(bottom = 16.dp))
 
         // Label
         Text("Select worksite:", fontSize = 18.sp, modifier = Modifier.padding(bottom = 8.dp))
@@ -384,17 +387,17 @@ fun ConnectedScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             GroupedDataCard(
-                title = "Gas/smoke presence",
+                title = "Gas/smoke Presence",
                 fields = groupedData["gas"] ?: emptyList()
             )
             Spacer(modifier = Modifier.height(8.dp))
             GroupedDataCard(
-                title = "Standard deviation accelerometer values",
+                title = "Standard Deviation Accelerometer Values",
                 fields = groupedData["std_"] ?: emptyList()
             )
             Spacer(modifier = Modifier.height(8.dp))
             GroupedDataCard(
-                title = "Mean Average accelerometer Values",
+                title = "Mean Average Accelerometer Values",
                 fields = groupedData["avg_"] ?: emptyList()
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -415,7 +418,7 @@ fun ConnectedScreen(
                     .fillMaxWidth()
                     .height(48.dp)
             ) {
-                Text("Disconnetti", fontSize = 18.sp)
+                Text("Disconnect", fontSize = 18.sp)
             }
         }
     }
@@ -450,6 +453,18 @@ fun GroupedDataCard(title: String, fields: List<Map.Entry<String, String>>) {
 
 @Composable
 fun FieldItem(key: String, value: String) {
+    val displayValue = when {
+        value == "true" -> "Detected"
+        value == "false" -> "Undetected"
+        key == "incorrect_posture" -> {
+            val numericValue = value.toFloatOrNull() ?: 0f
+            "${(numericValue * 100).toInt()} %"  // Moltiplica per 100 e aggiungi il simbolo di percentuale
+        }
+        else -> value + getUnitForKey(key)
+    }
+
+    val displayKey = keyMappings[key] ?: key  // Usa il nome leggibile, se disponibile
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -457,20 +472,49 @@ fun FieldItem(key: String, value: String) {
         verticalAlignment = Alignment.CenterVertically // Align items vertically in the row
     ) {
         Text(
-            text = key + ":", // Added colon for better readability
+            text = displayKey + ": ", // Added colon for better readability
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = Purple40,
-            modifier = Modifier.weight(0.4f) // Key takes 40% of the width
+            modifier = Modifier.weight(0.5f) // Key takes 50% of the width
         )
         Text(
-            text = value,
+            text = displayValue,
             fontSize = 14.sp,
             color = Color.Gray,
-            modifier = Modifier.weight(0.6f) // Value takes 60% of the width
+            modifier = Modifier.weight(0.5f) // Value takes 50% of the width
         )
     }
 }
+
+fun getUnitForKey(key: String): String {
+    return when {
+        key.contains("temperature", ignoreCase = true) -> " °C"
+        key.contains("humidity", ignoreCase = true) -> " %"
+        key.contains("brightness", ignoreCase = true) -> " lux"
+        key.contains("_g", ignoreCase = true) -> " g"
+        key.startsWith("std_") || key.startsWith("avg_") -> " m/s²"
+        else -> ""
+    }
+}
+
+val keyMappings = mapOf(
+    "std_x" to "X",
+    "std_y" to "Y",
+    "std_z" to "Z",
+    "std_g" to "Magnitude",
+    "avg_x" to "X",
+    "avg_y" to "Y",
+    "avg_z" to "Z",
+    "avg_g" to "Magnitude",
+    "methane" to "Methane",
+    "carbon_monoxide" to "Carbon Monoxide",
+    "smoke_detection" to "Smoke",
+    "temperature" to "Temperature",
+    "humidity" to "Humidity",
+    "brightness" to "Brightness",
+    "incorrect_posture" to "Incorrect posture"
+)
 
 // Funzione che analizza il JSON e lo raggruppa in base ai prefissi
 fun groupData(jsonMap: Map<String, String>): Map<String, List<Map.Entry<String, String>>> {
@@ -488,6 +532,10 @@ fun groupData(jsonMap: Map<String, String>): Map<String, List<Map.Entry<String, 
 
             entry.key == "methane" || entry.key == "carbon_monoxide" || entry.key == "smoke_detection" -> {
                 grouped.getOrPut("gas") { mutableListOf() }.add(entry)
+            }
+
+            entry.key == "uses_welding_protection" || entry.key == "uses_gas_protection" -> {
+                // Non aggiungere questi elementi a nessun gruppo, vengono ignorati
             }
 
             else -> {
@@ -573,7 +621,7 @@ fun DeviceItem(device: BleDevice, onConnect: () -> Unit) {
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Purple40)
             ) {
-                Text("Connetti", color = Color.White, fontSize = 16.sp)
+                Text("Connect", color = Color.White, fontSize = 16.sp)
             }
         }
     }
