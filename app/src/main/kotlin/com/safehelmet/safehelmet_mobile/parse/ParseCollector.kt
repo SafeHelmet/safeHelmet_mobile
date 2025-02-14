@@ -2,8 +2,10 @@ package com.safehelmet.safehelmet_mobile.parse
 
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import com.safehelmet.safehelmet_mobile.BackendValues
 import com.safehelmet.safehelmet_mobile.api.HttpClient
 import org.json.JSONObject
+import kotlin.coroutines.resume
 import kotlin.math.log
 
 object ParseCollector {
@@ -16,6 +18,8 @@ object ParseCollector {
     var state = mutableStateOf("")
         private set
 
+    var attendanceID = mutableStateOf("")
+
     fun processParse(parse: BaseParse?) {
 
         when (parse) {
@@ -26,7 +30,7 @@ object ParseCollector {
         }
 
         if (allValuesCollected() && (parseSleep?.sleep == false || parseSleep?.sleep == null )) {
-            //sendDataToBackend()
+            sendDataToBackend()
             // Aggiorna lo stato ogni volta che vengono modificati i dati
             state.value = createReadingJson()
             resetValues()
@@ -47,7 +51,11 @@ object ParseCollector {
     }
 
     private fun createReadingJson(): String {
+        val attendance = JSONObject(getLastAttendanceID())
+
+
         val json = JSONObject()
+
         json.put("temperature", parseData!!.temp)
         json.put("humidity", parseData!!.hum)
         json.put("brightness", parseData!!.lux)
@@ -76,4 +84,22 @@ object ParseCollector {
             response?.body?.let { Log.i("ParseCollector", it.string()) }
         }
     }
+
+    private fun getLastAttendanceID() {
+        HttpClient.getRequest(
+            "/api/v1/attendance/attendance-details/:${BackendValues.workerID}/:${BackendValues.worksiteID}/:${BackendValues.helmetID}"
+        ) { response ->
+            response?.body?.let { Log.i("ParseCollector", it.string()) }
+            if (response?.isSuccessful == true) {
+                val jsonResponse = JSONObject(response.body?.string().toString())
+                attendanceID = jsonResponse.getString("id")
+
+
+            } else {
+
+
+            }
+        }
+    }
+
 }

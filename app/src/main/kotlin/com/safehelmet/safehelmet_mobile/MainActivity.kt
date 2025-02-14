@@ -334,7 +334,7 @@ fun SettingsScreen(
 @Composable
 fun ConnectedScreen(
     bleManager: BleManager,
-    connectedDeviceName: String?,
+    connectedDeviceName: String?, // Riceve il nome del dispositivo
     onDisconnectButtonClick: () -> Unit
 ) {
     val data by ParseCollector.state
@@ -356,7 +356,7 @@ fun ConnectedScreen(
                 .weight(0.2f)
         ) {
             Text(
-                "Connected to: ${connectedDeviceName ?: "Unknown device"}",
+                "Connected to: ${connectedDeviceName ?: "Unknown device"}", // Mostra il nome
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 10.dp)
