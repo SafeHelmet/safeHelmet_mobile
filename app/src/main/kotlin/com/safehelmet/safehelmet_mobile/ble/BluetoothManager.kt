@@ -150,11 +150,6 @@ class BleManager(private val context: Context) {
         }
     }
 
-    // Avvia il task di pulizia periodico
-    init {
-        handler.postDelayed(removeTask, 5000)
-    }
-
 
     fun startScanning() {
         scannedDevices.clear()  // Pulisce la lista prima di ogni scansione
@@ -168,6 +163,7 @@ class BleManager(private val context: Context) {
             return
         }
         bluetoothLeScanner?.startScan(scanCallback)
+        handler.postDelayed(removeTask, 5000)
         Log.i("BluetoothManager", "Bluetooth scan started.")
     }
 
@@ -182,6 +178,7 @@ class BleManager(private val context: Context) {
             return
         }
         bluetoothLeScanner?.stopScan(scanCallback) // Use the same callback
+        handler.removeCallbacks(removeTask)
         Log.i("BluetoothManager", "Bluetooth scan stopped.")
     }
 
