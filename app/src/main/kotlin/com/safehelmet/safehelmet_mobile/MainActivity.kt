@@ -116,7 +116,6 @@ class MainActivity : ComponentActivity() {
                         if (loginSuccessful) {
                             isLogin.value = true
                         } else {
-                            isLogin.value = true
                             Toast.makeText(
                                 this@MainActivity,
                                 "Not a valid login",
