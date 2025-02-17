@@ -22,7 +22,7 @@ fun uuidFrom16Bit(shortUuid: Int): UUID {
 }
 
 
-class BleCallbackHandler(private val context: Context) : BluetoothGattCallback() {
+class BleCallbackHandler(private val context: Context, private val onDisconnected: () -> Unit) : BluetoothGattCallback() {
 
     private fun subscribeToCharacteristic(gatt: BluetoothGatt, characteristicUUID: Int) {
         val dataCharacteristic =
@@ -65,6 +65,8 @@ class BleCallbackHandler(private val context: Context) : BluetoothGattCallback()
             android.bluetooth.BluetoothProfile.STATE_DISCONNECTED -> {
                 Log.i("BluetoothManager", "Disconnected from ${gatt.device.address}")
                 gatt.close()
+                // Chiamata alla callback per aggiornare la UI
+                onDisconnected()
             }
         }
     }

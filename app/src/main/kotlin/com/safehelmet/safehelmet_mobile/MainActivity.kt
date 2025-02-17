@@ -34,6 +34,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,6 +56,7 @@ import com.safehelmet.safehelmet_mobile.ui.theme.Purple40
 import kotlinx.coroutines.launch
 import login
 import androidx.work.*
+import kotlinx.coroutines.MainScope
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -158,6 +161,20 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
     }
 
     val onStartScanning = { devices.clear() }
+    val context = LocalContext.current
+
+    // Imposta la callback per la disconnessione
+    LaunchedEffect(Unit) {
+        bleManager.onDisconnected = {
+            connectionState = ConnectionState.NON_CONNECTED
+            connectedDeviceName = null
+            currentScreen = Screen.NON_CONNECTED
+            // Usare MainScope per assicurarsi che il Toast venga eseguito sul thread principale
+            MainScope().launch {
+                Toast.makeText(context, "The device disconnected unexpectedly", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     // Se siamo connessi, mostriamo sempre la ConnectedScreen
     if (connectionState == ConnectionState.CONNECTED) {

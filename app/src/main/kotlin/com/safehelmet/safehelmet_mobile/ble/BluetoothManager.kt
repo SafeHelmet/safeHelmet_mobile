@@ -38,6 +38,7 @@ class BleManager(private val context: Context) {
 
     private var peripherals = mutableMapOf<String, BluetoothDevice>()
     private var gatt: BluetoothGatt? = null
+    var onDisconnected: (() -> Unit)? = null // Callback per notificare la UI
 
 
     fun initializeBluetoothManager(
@@ -95,7 +96,7 @@ class BleManager(private val context: Context) {
     }
 
     private val lastSeenDevices = mutableMapOf<String, Long>()
-    private val deviceTimeout = 10_000L // 10 secondi di timeout
+    private val deviceTimeout = 2_000L // 2 secondi di timeout
     private val handler = Handler(Looper.getMainLooper())
 
     // Shared Callback
@@ -146,7 +147,7 @@ class BleManager(private val context: Context) {
             }
 
             onDevicesFound?.invoke(scannedDevices) // Aggiorna UI
-            handler.postDelayed(this, 5000) // Controlla ogni 5 secondi
+            handler.postDelayed(this, 1000) // Controlla ogni secondo
         }
     }
 
@@ -163,7 +164,7 @@ class BleManager(private val context: Context) {
             return
         }
         bluetoothLeScanner?.startScan(scanCallback)
-        handler.postDelayed(removeTask, 5000)
+        handler.postDelayed(removeTask, 1000)
         Log.i("BluetoothManager", "Bluetooth scan started.")
     }
 
@@ -223,9 +224,12 @@ class BleManager(private val context: Context) {
         Log.i("BluetoothManager", "Connected to device: ${device.name} - ${device.address}")
 
         // Use the connectGatt method to establish the connection
-        val bluetoothGatt = device.connectGatt(context, false, BleCallbackHandler(context))
+        // val bluetoothGatt = device.connectGatt(context, false, BleCallbackHandler(context))
+        // gatt = bluetoothGatt
 
-        gatt = bluetoothGatt
+        gatt = device.connectGatt(context, false, BleCallbackHandler(context) {
+            onDisconnected?.invoke() // Chiamata alla callback quando si disconnette
+        })
     }
 
 
