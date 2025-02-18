@@ -1,20 +1,15 @@
-- vedere tutte le letture
-- grafico delle segnalazioni / sensori
-- collegameto api meteo per dinamico o meno
-- segnalazione con anomalia
-- con il qr associare il casco al telefono
-
 ## TODO shit
 
-## mux
-- [ ] Testare API con parametri(mux)
-- [ ] POST per le reading (json)(mux), verificando che non sia a standby-sleep
-- [ ] polling per anomalie, messaggio di gianfranco nella merda, oppure scivolato sulla smerda
-
-## pesto
-- [ ] manda messaggio post anomalia al casco per farlo suonare
-- [ ] Byte delle readings da senore(pesto)
-
+- POST delle reading:
+  - [ ] Post per pushare i dati letti al backend
+  - [ ] Gestire codice di ritorno POST se ho fatto una lettura anomala
+- Polling:
+  - [ ] Far funzionare lo scheduler per il polling
+  - [ ] Scrivere dall'app sulla categoria per attivare il motorino se presente una lettura anoamla
+- Workiste
+  - [ ] Cambiare metodo di selezione del worksite
 
 ## se abbiamo tempo
-- [ ] Grafica decente con dei menu (mux-pesto)
+- [ ] Grafica decente
+- [ ] Refactor del MainActivity ?
+- [ ] Debug mode ?
