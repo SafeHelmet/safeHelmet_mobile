@@ -1,5 +1,5 @@
 [versions]
-agp = "8.8.0"
+agp = "8.8.1"
 dotenvKotlin = "6.5.0"
 kotlin = "2.1.0"
 coreKtx = "1.15.0"
@@ -8,16 +8,14 @@ junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.0"
-composeBom = "2025.01.01"
+composeBom = "2025.02.00"
 okhttp = "4.12.0"
 workRuntimeKtx = "2.10.0"
-workRuntimeKtxVersion = "2.8.1"
 constraintlayoutComposeAndroid = "1.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
-androidx-work-runtime-ktx-v281 = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtxVersion" }
 dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "dotenvKotlin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
