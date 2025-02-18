@@ -11,15 +11,14 @@ import java.io.IOException
 object HttpClient {
 
     private val client = OkHttpClient()
-    private val authToken = BuildConfig.API_TOKEN
-
-    private val base_url = "https://safehelmet-backend.onrender.com"
+    private const val AUTH_TOKEN = BuildConfig.API_TOKEN
+    private const val BASE_URL = "https://safehelmet-backend.onrender.com"
 
     // Funzione per eseguire la richiesta con autorizzazione
     fun getRequest(url: String, callback: (Response?) -> Unit) {
         val request = Request.Builder()
-            .url(base_url+url)
-            .addHeader("Authorization", authToken)
+            .url(BASE_URL+url)
+            .addHeader("Authorization", AUTH_TOKEN)
             .build()
 
         client.newCall(request).enqueue(object : Callback {
@@ -48,9 +47,9 @@ object HttpClient {
         val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
 
         val request = Request.Builder()
-            .url(base_url+url)
+            .url(BASE_URL+url)
             .post(body)
-            .addHeader("Authorization", authToken) // Aggiungi il token di autorizzazione
+            .addHeader("Authorization", AUTH_TOKEN) // Aggiungi il token di autorizzazione
             .build()
 
         client.newCall(request).enqueue(object : Callback {
