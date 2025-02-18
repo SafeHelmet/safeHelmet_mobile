@@ -67,7 +67,7 @@ object ParseCollector {
         json.put("std_y", parseCrash2!!.std_y)
         json.put("std_z", parseCrash2!!.std_z)
         json.put("incorrect_posture", parseCrash2!!.incorrect_posture_percentuage)
-        Log.i("json_merda", json.toString())
+
         return json.toString()
     }
 

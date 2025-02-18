@@ -280,7 +280,6 @@ fun NonConnectedScreen(
                             ) { response2 ->
                                 response2?.body?.let { body ->
                                     val responseString = body.string() // Leggiamo il body una sola volta
-                                    Log.i("ParseCollector", responseString)
 
                                     if (response2.isSuccessful) {
                                         val jsonResponse2 = JSONObject(responseString)
