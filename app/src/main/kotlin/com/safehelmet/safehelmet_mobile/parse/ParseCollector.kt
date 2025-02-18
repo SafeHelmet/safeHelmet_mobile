@@ -15,7 +15,6 @@ object ParseCollector {
 
     var state = mutableStateOf("")
 
-    var attendanceID = mutableStateOf("")
 
     fun processParse(parse: BaseParse?) {
 
@@ -48,10 +47,9 @@ object ParseCollector {
     }
 
     private fun createReadingJson(): String {
-        getLastAttendanceID()
 
         val json = JSONObject()
-        json.put("attendance_id", attendanceID)
+        BackendValues.attendanceID?.let { json.put("attendance_id", it.toInt()) }
         json.put("temperature", parseData!!.temp)
         json.put("humidity", parseData!!.hum)
         json.put("brightness", parseData!!.lux)
@@ -69,6 +67,7 @@ object ParseCollector {
         json.put("std_y", parseCrash2!!.std_y)
         json.put("std_z", parseCrash2!!.std_z)
         json.put("incorrect_posture", parseCrash2!!.incorrect_posture_percentuage)
+        Log.i("json_merda", json.toString())
         return json.toString()
     }
 
@@ -81,16 +80,4 @@ object ParseCollector {
         }
     }
 
-    private fun getLastAttendanceID() {
-        HttpClient.getRequest(
-            "/api/v1/attendance/attendance-details/:${BackendValues.workerID}/:${BackendValues.worksiteID}/:${BackendValues.helmetID}"
-        ) { response ->
-            response?.body?.let { Log.i("ParseCollector", it.string()) }
-            if (response?.isSuccessful == true) {
-                val jsonResponse = JSONObject(response.body?.string().toString())
-                attendanceID.value = jsonResponse.getString("id")
-            }
-        }
-
-    }
 }

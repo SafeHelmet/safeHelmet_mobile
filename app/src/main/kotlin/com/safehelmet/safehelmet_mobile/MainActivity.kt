@@ -60,6 +60,7 @@ import androidx.work.*
 import kotlinx.coroutines.MainScope
 import org.json.JSONException
 import org.json.JSONObject
+import kotlin.math.log
 
 class MainActivity : ComponentActivity() {
     var isLogin = mutableStateOf(false)
@@ -265,6 +266,7 @@ fun NonConnectedScreen(
                             device.name ?: "Sconosciuto"
                         ) // Passa il nome del device
 
+                        //TODO
                         val dev = "mac0"
 
                         HttpClient.getRequest(
@@ -273,7 +275,26 @@ fun NonConnectedScreen(
                             val jsonResponse = JSONObject(response?.body?.string().toString())
                             BackendValues.helmetID =
                                 jsonResponse.getInt("helmet_id").toString()  // jsonResponse.getJSONObject("helmet_id").getString("id")
+                            HttpClient.getRequest(
+                                "/api/v1/attendance/check-existance/${BackendValues.workerID}/${BackendValues.worksiteID}/${BackendValues.helmetID}"
+                            ) { response2 ->
+                                response2?.body?.let { body ->
+                                    val responseString = body.string() // Leggiamo il body una sola volta
+                                    Log.i("ParseCollector", responseString)
+
+                                    if (response2.isSuccessful) {
+                                        val jsonResponse2 = JSONObject(responseString)
+                                        BackendValues.attendanceID = jsonResponse2.getJSONObject("attendance").getString("id")
+                                    }
+                                }
+                            }
                         }
+
+                        BackendValues.helmetID?.let { Log.i("BackendValues.helmetID", it) }
+
+
+
+
                     }
                 )
             }
