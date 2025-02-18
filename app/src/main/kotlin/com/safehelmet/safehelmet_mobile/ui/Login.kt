@@ -47,7 +47,8 @@ fun LoginScreen(onLogin: (String, String) -> Unit) {
             onValueChange = { email = it },
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            singleLine = true
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -59,7 +60,8 @@ fun LoginScreen(onLogin: (String, String) -> Unit) {
             label = { Text("Password") },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            singleLine = true
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -100,15 +102,15 @@ suspend fun login(email: String, password: String): Boolean {
         Log.i("Login", "Start Login Request")
 
         val json = JSONObject()
-        json.put("email", email)
-        json.put("password", password)
+        json.put("email", email.trim())
+        json.put("password", password.trim())
 
 
         // Esegui la richiesta HTTP in modo asincrono
         HttpClient.postRequest(
             "/api/v1/login", json.toString()
         ) { response ->
-            Log.i("Login", "Response received: ${response?.isSuccessful}")
+            Log.i("Login", "Credentials accepted: ${response?.isSuccessful}")
             if (response?.isSuccessful == true) {
                 val jsonResponse = JSONObject(response.body?.string().toString())
                 BackendValues.workerID = jsonResponse.getJSONObject("user").getString("id")
