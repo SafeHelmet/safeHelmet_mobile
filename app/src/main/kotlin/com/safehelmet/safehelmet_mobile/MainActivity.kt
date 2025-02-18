@@ -84,6 +84,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+    /// TODO: Probabilmente meglio spostare in dopo che mi sono connesso al casco
     private fun scheduleApiWorker(context: Context) {
         val workRequest = PeriodicWorkRequestBuilder<PollingScheduler>(10, java.util.concurrent.TimeUnit.SECONDS)
             .setConstraints(
@@ -201,10 +202,6 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
                 onNavigateToSettings = {
                     currentScreen = Screen.SETTINGS
                 }, // Callback per navigare a Settings
-                onEnterDebugMode = {
-                    connectionState = ConnectionState.CONNECTED
-                    connectedDeviceName = "Debug Mode"
-                }
             )
 
             Screen.SETTINGS -> SettingsScreen(
@@ -221,7 +218,6 @@ fun NonConnectedScreen(
     onConnectButtonClick: (String) -> Unit,
     onStartScanning: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onEnterDebugMode: () -> Unit
 ) {
     Column(modifier = Modifier.padding(16.dp)) {
         // Pulsante Settings
@@ -253,15 +249,6 @@ fun NonConnectedScreen(
                 .padding(bottom = 16.dp)
         ) {
             Text("Stop Scanning", fontSize = 18.sp)
-        }
-
-        Button(
-            onClick = onEnterDebugMode,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 30.dp)
-        ) {
-            Text("Debug mode", fontSize = 18.sp)
         }
 
         Text("Devices found:", fontSize = 20.sp, modifier = Modifier.padding(bottom = 8.dp))

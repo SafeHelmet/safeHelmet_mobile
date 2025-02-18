@@ -23,6 +23,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.safehelmet.safehelmet_mobile.BackendValues
 import com.safehelmet.safehelmet_mobile.api.HttpClient
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -90,7 +91,17 @@ fun LoginScreen(onLogin: (String, String) -> Unit) {
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Login")
+            Text("Login", fontSize = 18.sp)
+        }
+
+        /// TODO: Entrare in modalita debug e passare a debugScreen
+        Button(
+            onClick = { println("Debug Mode") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 30.dp)
+        ) {
+            Text("Debug mode", fontSize = 18.sp)
         }
     }
 }
