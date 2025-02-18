@@ -1,7 +1,14 @@
 package com.safehelmet.safehelmet_mobile
 
-import LoginScreen
 import com.safehelmet.safehelmet_mobile.polling.PollingScheduler
+import com.safehelmet.safehelmet_mobile.api.HttpClient
+import com.safehelmet.safehelmet_mobile.ble.BleDevice
+import com.safehelmet.safehelmet_mobile.ble.BleManager
+import com.safehelmet.safehelmet_mobile.parse.ParseCollector
+import com.safehelmet.safehelmet_mobile.ui.theme.Purple40
+import login
+import LoginScreen
+
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -48,13 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import com.safehelmet.safehelmet_mobile.api.HttpClient
-import com.safehelmet.safehelmet_mobile.ble.BleDevice
-import com.safehelmet.safehelmet_mobile.ble.BleManager
-import com.safehelmet.safehelmet_mobile.parse.ParseCollector
-import com.safehelmet.safehelmet_mobile.ui.theme.Purple40
 import kotlinx.coroutines.launch
-import login
 import androidx.work.*
 import kotlinx.coroutines.MainScope
 import org.json.JSONException
