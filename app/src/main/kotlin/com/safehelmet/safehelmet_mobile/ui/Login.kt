@@ -93,16 +93,6 @@ fun LoginScreen(onLogin: (String, String) -> Unit) {
         ) {
             Text("Login", fontSize = 18.sp)
         }
-
-        /// TODO: Entrare in modalita debug e passare a debugScreen
-        Button(
-            onClick = { println("Debug Mode") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 30.dp)
-        ) {
-            Text("Debug mode", fontSize = 18.sp)
-        }
     }
 }
 

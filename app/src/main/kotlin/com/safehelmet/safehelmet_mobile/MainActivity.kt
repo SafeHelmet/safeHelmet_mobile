@@ -110,8 +110,6 @@ class MainActivity : ComponentActivity() {
         bleManager.initializeBluetoothManager(this, enableBluetoothLauncher, permissionsLauncher)
         bleManager.initializeBluetooth()
 
-        scheduleApiWorker(this)
-
         setContent {
             if (!isLogin.value) {
                 LoginScreen { username, password ->
@@ -130,6 +128,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             } else {
+                scheduleApiWorker(this)
                 BluetoothScreenWrapper(bleManager)
             }
         }

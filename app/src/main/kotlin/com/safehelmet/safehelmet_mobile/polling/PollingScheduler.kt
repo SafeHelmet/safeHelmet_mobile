@@ -7,20 +7,16 @@ import androidx.work.WorkerParameters
 import com.safehelmet.safehelmet_mobile.api.HttpClient
 import org.json.JSONObject
 import com.safehelmet.safehelmet_mobile.BackendValues as appContext
-import com.safehelmet.safehelmet_mobile.ble.BleManager
 
 class PollingScheduler(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
 
     override fun doWork(): Result {
         try {
 
-            Log.i("com.safehelmet.safehelmet_mobile.polling.PollingScheduler", "Polling scheduler started")
-
-            // Prima API: Verifica il valore
-            val shouldAdviseBLEHelmet = isReadingAnomaly()
+            Log.i("Polling", "Polling scheduler started")
 
             // Se il valore è vero, avvisa il caschetto in BLE
-            if (shouldAdviseBLEHelmet) {
+            if (isReadingAnomaly()) {
                 adviseBLEHelmet()
             }
 
