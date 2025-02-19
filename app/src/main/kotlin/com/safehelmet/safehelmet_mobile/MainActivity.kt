@@ -60,7 +60,7 @@ import androidx.work.*
 import kotlinx.coroutines.MainScope
 import org.json.JSONException
 import org.json.JSONObject
-import kotlin.math.log
+
 
 class MainActivity : ComponentActivity() {
     var isLogin = mutableStateOf(false)
@@ -112,6 +112,8 @@ class MainActivity : ComponentActivity() {
         bleManager.initializeBluetooth()
 
         setContent {
+            var firstTimeInSettings by remember { mutableStateOf(true) } // Controlla se è il primo accesso ai Settings
+
             if (!isLogin.value) {
                 LoginScreen { username, password ->
                     lifecycleScope.launch {
@@ -128,6 +130,12 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+            } else if (firstTimeInSettings) {
+                // Mostra SettingsScreen con pulsante "OK"
+                SettingsScreen(
+                    firstAccess = true,
+                    onConfirm = { firstTimeInSettings = false } // Dopo la conferma, va a NonConnectedScreen
+                )
             } else {
                 scheduleApiWorker(this)
                 BluetoothScreenWrapper(bleManager)
@@ -205,7 +213,7 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
             )
 
             Screen.SETTINGS -> SettingsScreen(
-                onBack = { currentScreen = Screen.NON_CONNECTED } // Callback per tornare indietro
+                onConfirm = { currentScreen = Screen.NON_CONNECTED } // Callback per tornare indietro
             )
         }
     }
@@ -263,7 +271,7 @@ fun NonConnectedScreen(
                     onConnect = {
                         bleManager.connectToPeripheral(device.address)
                         onConnectButtonClick(
-                            device.name ?: "Sconosciuto"
+                            device.name ?: "Unknown"
                         ) // Passa il nome del device
 
                         //TODO
@@ -303,11 +311,13 @@ fun NonConnectedScreen(
 
 @Composable
 fun SettingsScreen(
-    onBack: () -> Unit
+    firstAccess: Boolean = false, // Aggiunto per distinguere il primo accesso
+    onConfirm: () -> Unit
 ) {
     var selectedWorksite by remember { mutableStateOf<String?>(null) }
     var expanded by remember { mutableStateOf(false) }
     var worksiteMap by remember { mutableStateOf<Map<Int, String>>(emptyMap()) }
+    var isWorksiteSelected by remember { mutableStateOf(false) } // Controlla se è stato scelto un worksite
 
     // Ottieni i cantieri dall'API
     HttpClient.getRequest("/api/v1/workers/${BackendValues.workerID}/worksite") { response ->
@@ -328,12 +338,17 @@ fun SettingsScreen(
 
     Column(modifier = Modifier.padding(16.dp)) {
         Button(
-            onClick = onBack,
+            onClick = {
+                if (!firstAccess || isWorksiteSelected) {
+                    onConfirm()
+                }
+            },
+            enabled = (!firstAccess || isWorksiteSelected), // Disabilita se non è selezionato
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp)
         ) {
-            Text("Back", fontSize = 18.sp)
+            Text(if (firstAccess) "OK" else "Back", fontSize = 18.sp)
         }
 
         Text("Settings", fontSize = 24.sp, modifier = Modifier.padding(bottom = 16.dp))
@@ -360,6 +375,7 @@ fun SettingsScreen(
                             selectedWorksite = worksite
                             expanded = false
                             BackendValues.worksiteID = id.toString()
+                            isWorksiteSelected = true // Imposta come selezionato
                         }
                     )
                 }
@@ -571,7 +587,7 @@ fun groupData(jsonMap: Map<String, String>): Map<String, List<Map.Entry<String, 
                 grouped.getOrPut("gas") { mutableListOf() }.add(entry)
             }
 
-            entry.key == "uses_welding_protection" || entry.key == "uses_gas_protection" -> {
+            entry.key == "uses_welding_protection" || entry.key == "uses_gas_protection" || entry.key == "attendance_id" -> {
                 // Non aggiungere questi elementi a nessun gruppo, vengono ignorati
             }
 
@@ -638,7 +654,7 @@ fun DeviceItem(device: BleDevice, onConnect: () -> Unit) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = device.name ?: "Sconosciuto",
+                    text = device.name ?: "Unknown",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Purple40
