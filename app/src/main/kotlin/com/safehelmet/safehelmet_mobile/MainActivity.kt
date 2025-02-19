@@ -274,15 +274,12 @@ fun NonConnectedScreen(
                             device.name ?: "Unknown"
                         ) // Passa il nome del device
 
-                        //TODO
-                        val dev = "mac0"
-
                         HttpClient.getRequest(
-                            "/api/v1/helmets/mac-address/${dev}"  // ${device.address}
+                            "/api/v1/helmets/mac-address/${device.address}"
                         ) { response ->
                             val jsonResponse = JSONObject(response?.body?.string().toString())
                             BackendValues.helmetID =
-                                jsonResponse.getInt("helmet_id").toString()  // jsonResponse.getJSONObject("helmet_id").getString("id")
+                                jsonResponse.getInt("helmet_id").toString()
                             HttpClient.getRequest(
                                 "/api/v1/attendance/check-existance/${BackendValues.workerID}/${BackendValues.worksiteID}/${BackendValues.helmetID}"
                             ) { response2 ->
@@ -560,6 +557,7 @@ val keyMappings = mapOf(
     "avg_y" to "Y",
     "avg_z" to "Z",
     "avg_g" to "Magnitude",
+    "max_g" to "Max. magnitude",
     "methane" to "Methane",
     "carbon_monoxide" to "Carbon Monoxide",
     "smoke_detection" to "Smoke",

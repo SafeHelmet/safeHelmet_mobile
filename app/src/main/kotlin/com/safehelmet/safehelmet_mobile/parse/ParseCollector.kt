@@ -66,6 +66,7 @@ object ParseCollector {
         json.put("std_x", parseCrash2!!.std_x)
         json.put("std_y", parseCrash2!!.std_y)
         json.put("std_z", parseCrash2!!.std_z)
+        json.put("max_g", parseCrash2!!.max_g)
         json.put("incorrect_posture", parseCrash2!!.incorrect_posture_percentuage)
 
         return json.toString()
