@@ -8,8 +8,10 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothStatusCodes
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
@@ -205,6 +207,30 @@ class BleManager(private val context: Context) {
         return true
     }
 
+    private val bluetoothReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val action = intent.action
+            if (BluetoothAdapter.ACTION_STATE_CHANGED == action) {
+                val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
+                when (state) {
+                    BluetoothAdapter.STATE_OFF -> {
+                        Log.i("BluetoothManager", "Bluetooth off")
+                        disconnectFromPeripheral()
+                        onDisconnected?.invoke()
+                    }
+
+                    BluetoothAdapter.STATE_TURNING_OFF -> {
+                        Log.i("BluetoothManager", "Bluetooth turning off")
+                    }
+
+                    BluetoothAdapter.STATE_ON -> {
+                        Log.i("BluetoothManager", "Bluetooth on")
+                    }
+                }
+            }
+        }
+    }
+
     fun connectToPeripheral(uuid: String) {
         stopScanning()
         val device = peripherals[uuid]
@@ -253,6 +279,17 @@ class BleManager(private val context: Context) {
         } else {
             Log.e("BluetoothManager", "No active connection found for the device.")
         }
+    }
+
+    // Funzione per registrare il BluetoothReceiver
+    fun registerReceiver() {
+        val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        context.registerReceiver(bluetoothReceiver, filter)
+    }
+
+    // Funzione per deregistrare il BluetoothReceiver
+    fun unregisterReceiver() {
+        context.unregisterReceiver(bluetoothReceiver)
     }
 
 

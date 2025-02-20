@@ -111,6 +111,9 @@ class MainActivity : ComponentActivity() {
         bleManager.initializeBluetoothManager(this, enableBluetoothLauncher, permissionsLauncher)
         bleManager.initializeBluetooth()
 
+        // Registra il BluetoothReceiver per ricevere i cambiamenti dello stato del Bluetooth
+        bleManager.registerReceiver()
+
         setContent {
             var firstTimeInSettings by remember { mutableStateOf(true) } // Controlla se è il primo accesso ai Settings
 
@@ -141,6 +144,12 @@ class MainActivity : ComponentActivity() {
                 BluetoothScreenWrapper(bleManager)
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Deregistra il BluetoothReceiver per evitare memory leaks
+        bleManager.unregisterReceiver()
     }
 }
 
