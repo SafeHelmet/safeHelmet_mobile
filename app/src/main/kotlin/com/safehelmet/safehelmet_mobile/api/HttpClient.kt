@@ -42,6 +42,30 @@ object HttpClient {
         })
     }
 
+    fun getRequestSync(url: String): Response? {
+        return try {
+            val request = Request.Builder()
+                .url(BASE_URL + url)
+                .addHeader("Authorization", AUTH_TOKEN)
+                .build()
+
+            val response = client.newCall(request).execute() // Chiamata sincrona
+
+            if (response.isSuccessful) {
+                response
+            } else {
+                Log.e("API_ERROR", "Response failed with status code: ${response.code}")
+                Log.e("API_ERROR", "Error body: ${response.body?.string() ?: "No error body"}")
+                null
+            }
+        } catch (e: IOException) {
+            Log.e("API_ERROR", "Network request failed: ${e.message}", e)
+            null
+        }
+    }
+
+
+
     // Funzione per eseguire una richiesta POST con autorizzazione
     fun postRequest(url: String, json: String, callback: (Response?) -> Unit) {
         val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())

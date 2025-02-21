@@ -1,5 +1,6 @@
 package com.safehelmet.safehelmet_mobile.polling
 
+import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.util.Log
 import androidx.work.Worker
@@ -28,19 +29,23 @@ class PollingScheduler(context: Context, workerParams: WorkerParameters) : Worke
     }
 
     private fun isReadingAnomaly(): Boolean {
-        var isAnomaly = false
-        HttpClient.getRequest(
-            "/api/v1/polling/${appContext.helmetID}"
-        ){ response ->
-
-            val r = response?.body?.string()?.let { JSONObject(it) }
-            if( r!= null)
-                isAnomaly = r.getBoolean("anomaly_detected")
+        return try {
+            val response = HttpClient.getRequestSync("/api/v1/polling/${appContext.helmetID}")
+            if (response?.isSuccessful == true) {
+                val json = JSONObject(response.body?.string() ?: "{}")
+                json.getBoolean("anomaly_detected")
+            } else {
+                Log.e("Polling", "Errore HTTP: ${response?.code}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("Polling", "Errore durante la richiesta HTTP", e)
+            false
         }
-        return isAnomaly
     }
 
+
     private fun adviseBLEHelmet() {
-//        bleManager.adviseForAnomaly()
+        //BluetoothManager.adviseForAnomaly()
     }
 }

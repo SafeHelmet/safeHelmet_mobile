@@ -57,6 +57,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import androidx.work.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import org.json.JSONException
 import org.json.JSONObject
@@ -237,36 +239,23 @@ fun NonConnectedScreen(
     onNavigateToSettings: () -> Unit,
 ) {
     Column(modifier = Modifier.padding(16.dp)) {
-        // Pulsante Settings
         Button(
             onClick = onNavigateToSettings,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp)
-        ) {
-            Text("Settings", fontSize = 18.sp)
-        }
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+        ) { Text("Settings", fontSize = 18.sp) }
 
         Button(
             onClick = {
                 bleManager.startScanning()
                 onStartScanning()
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp)
-        ) {
-            Text("Start Scanning", fontSize = 18.sp)
-        }
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+        ) { Text("Start Scanning", fontSize = 18.sp) }
 
         Button(
             onClick = { bleManager.stopScanning() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        ) {
-            Text("Stop Scanning", fontSize = 18.sp)
-        }
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+        ) { Text("Stop Scanning", fontSize = 18.sp) }
 
         Text("Devices found:", fontSize = 20.sp, modifier = Modifier.padding(bottom = 8.dp))
 
@@ -279,41 +268,40 @@ fun NonConnectedScreen(
                     device = device,
                     onConnect = {
                         bleManager.connectToPeripheral(device.address)
-                        onConnectButtonClick(
-                            device.name ?: "Unknown"
-                        ) // Passa il nome del device
+                        onConnectButtonClick(device.name ?: "Unknown")
 
-                        HttpClient.getRequest(
-                            "/api/v1/helmets/mac-address/${device.address}"
-                        ) { response ->
-                            val jsonResponse = JSONObject(response?.body?.string().toString())
-                            BackendValues.helmetID =
-                                jsonResponse.getInt("helmet_id").toString()
-                            HttpClient.getRequest(
-                                "/api/v1/attendance/check-existance/${BackendValues.workerID}/${BackendValues.worksiteID}/${BackendValues.helmetID}"
-                            ) { response2 ->
-                                response2?.body?.let { body ->
-                                    val responseString = body.string() // Leggiamo il body una sola volta
+                        CoroutineScope(Dispatchers.IO).launch {
+                            // Prima richiesta API
+                            val helmetResponse = HttpClient.getRequestSync(
+                                "/api/v1/helmets/mac-address/${device.address}"
+                            )
 
-                                    if (response2.isSuccessful) {
-                                        val jsonResponse2 = JSONObject(responseString)
-                                        BackendValues.attendanceID = jsonResponse2.getJSONObject("attendance").getString("id")
-                                    }
+                            if (helmetResponse?.isSuccessful == true) {
+                                val jsonResponse = JSONObject(helmetResponse.body?.string().orEmpty())
+                                BackendValues.helmetID = jsonResponse.getInt("helmet_id").toString()
+                            }
+
+                            // Seconda richiesta API se la prima ha successo
+                            BackendValues.helmetID?.let { helmetID ->
+                                val attendanceResponse = HttpClient.getRequestSync(
+                                    "/api/v1/attendance/check-existance/${BackendValues.workerID}/${BackendValues.worksiteID}/$helmetID"
+                                )
+
+                                if (attendanceResponse?.isSuccessful == true) {
+                                    val jsonResponse2 = JSONObject(attendanceResponse.body?.string().orEmpty())
+                                    BackendValues.attendanceID = jsonResponse2.getJSONObject("attendance").getString("id")
                                 }
                             }
+
+                            BackendValues.helmetID?.let { Log.i("BackendValues.helmetID", it) }
                         }
-
-                        BackendValues.helmetID?.let { Log.i("BackendValues.helmetID", it) }
-
-
-
-
                     }
                 )
             }
         }
     }
 }
+
 
 @Composable
 fun SettingsScreen(
