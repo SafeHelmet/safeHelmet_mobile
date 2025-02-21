@@ -215,8 +215,13 @@ class BleManager(private val context: Context) {
                 when (state) {
                     BluetoothAdapter.STATE_OFF -> {
                         Log.i("BluetoothManager", "Bluetooth off")
-                        disconnectFromPeripheral()
-                        onDisconnected?.invoke()
+                        if (gatt != null) {  // Controlla se esiste una connessione GATT attiva
+                            Log.i("BluetoothManager", "Device is connected, disconnecting...")
+                            disconnectFromPeripheral()
+                            onDisconnected?.invoke()
+                        } else {
+                            Log.i("BluetoothManager", "No active connection found, skipping disconnect.")
+                        }
                     }
 
                     BluetoothAdapter.STATE_TURNING_OFF -> {
