@@ -1,6 +1,6 @@
 package com.safehelmet.safehelmet_mobile
 
-import com.safehelmet.safehelmet_mobile.polling.PollingScheduler
+//import com.safehelmet.safehelmet_mobile.polling.PollingScheduler
 import com.safehelmet.safehelmet_mobile.api.HttpClient
 import com.safehelmet.safehelmet_mobile.ble.BleDevice
 import com.safehelmet.safehelmet_mobile.ble.BleManager
@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import androidx.work.*
+import com.safehelmet.safehelmet_mobile.polling.PollingScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
@@ -67,6 +68,9 @@ import org.json.JSONObject
 class MainActivity : ComponentActivity() {
     var isLogin = mutableStateOf(false)
     private lateinit var bleManager: BleManager
+    val pollingManager = PollingScheduler()
+
+
 
     private val enableBluetoothLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -87,22 +91,22 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-    /// TODO: Probabilmente meglio spostare in dopo che mi sono connesso al casco
-    private fun scheduleApiWorker(context: Context) {
-        val workRequest = PeriodicWorkRequestBuilder<PollingScheduler>(10, java.util.concurrent.TimeUnit.SECONDS)
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED) // Esegue solo se c'è internet
-                    .build()
-            )
-            .build()
-
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-            "ApiWorkerJob",
-            ExistingPeriodicWorkPolicy.KEEP, // Evita duplicati
-            workRequest
-        )
-    }
+//    /// TODO: Probabilmente meglio spostare in dopo che mi sono connesso al casco
+//    private fun scheduleApiWorker(context: Context) {
+//        val workRequest = PeriodicWorkRequestBuilder<PollingScheduler>(10, java.util.concurrent.TimeUnit.SECONDS)
+//            .setConstraints(
+//                Constraints.Builder()
+//                    .setRequiredNetworkType(NetworkType.CONNECTED) // Esegue solo se c'è internet
+//                    .build()
+//            )
+//            .build()
+//
+//        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+//            "ApiWorkerJob",
+//            ExistingPeriodicWorkPolicy.KEEP, // Evita duplicati
+//            workRequest
+//        )
+//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -115,6 +119,8 @@ class MainActivity : ComponentActivity() {
 
         // Registra il BluetoothReceiver per ricevere i cambiamenti dello stato del Bluetooth
         bleManager.registerReceiver()
+
+        pollingManager.startPolling()
 
         setContent {
             var firstTimeInSettings by remember { mutableStateOf(true) } // Controlla se è il primo accesso ai Settings
@@ -142,7 +148,7 @@ class MainActivity : ComponentActivity() {
                     onConfirm = { firstTimeInSettings = false } // Dopo la conferma, va a NonConnectedScreen
                 )
             } else {
-                scheduleApiWorker(this)
+                //scheduleApiWorker(this)
                 BluetoothScreenWrapper(bleManager)
             }
         }
