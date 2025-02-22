@@ -20,6 +20,9 @@ import androidx.core.content.ContextCompat
 
 import android.os.Handler
 import android.os.Looper
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 data class BleDevice(
     val name: String?,
@@ -41,7 +44,8 @@ class BleManager(private val context: Context) {
     private var peripherals = mutableMapOf<String, BluetoothDevice>()
     private var gatt: BluetoothGatt? = null
     var onDisconnected: (() -> Unit)? = null // Callback per notificare la UI
-
+    private val _isBluetoothEnabled = MutableStateFlow(bluetoothAdapter.isEnabled)
+    val isBluetoothEnabled: StateFlow<Boolean> = _isBluetoothEnabled.asStateFlow()
 
     fun initializeBluetoothManager(
         activity: Activity,
@@ -170,7 +174,7 @@ class BleManager(private val context: Context) {
         Log.i("BluetoothManager", "Bluetooth scan started.")
     }
 
-    fun stopScanning() {
+    fun stopScanning(bluetoothDisabled: Boolean = false) {
         val bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
         if (ActivityCompat.checkSelfPermission(
                 context,
@@ -182,6 +186,10 @@ class BleManager(private val context: Context) {
         }
         bluetoothLeScanner?.stopScan(scanCallback) // Use the same callback
         handler.removeCallbacks(removeTask)
+        if (bluetoothDisabled) {
+            scannedDevices.clear()
+            onDevicesFound?.invoke(scannedDevices) // Aggiorna UI
+        }
         Log.i("BluetoothManager", "Bluetooth scan stopped.")
     }
 
@@ -212,6 +220,7 @@ class BleManager(private val context: Context) {
             val action = intent.action
             if (BluetoothAdapter.ACTION_STATE_CHANGED == action) {
                 val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
+                _isBluetoothEnabled.value = (state == BluetoothAdapter.STATE_ON)
                 when (state) {
                     BluetoothAdapter.STATE_OFF -> {
                         Log.i("BluetoothManager", "Bluetooth off")
@@ -222,6 +231,7 @@ class BleManager(private val context: Context) {
                         } else {
                             Log.i("BluetoothManager", "No active connection found, skipping disconnect.")
                         }
+                        requestEnableBluetooth()
                     }
 
                     BluetoothAdapter.STATE_TURNING_OFF -> {

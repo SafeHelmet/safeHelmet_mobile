@@ -42,6 +42,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -78,6 +79,7 @@ class MainActivity : ComponentActivity() {
                 Log.i("BluetoothManager", "Bluetooth enabled successfully.")
             } else {
                 Log.e("BluetoothManager", "The user refused to enable Bluetooth.")
+                bleManager.stopScanning(true)
             }
         }
 
@@ -176,6 +178,7 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
     var connectedDeviceName by remember { mutableStateOf<String?>(null) }
     var currentScreen by remember { mutableStateOf(Screen.NON_CONNECTED) } // Stato per la navigazione
     val devices = remember { mutableStateListOf<BleDevice>() }
+    val isBluetoothEnabled by bleManager.isBluetoothEnabled.collectAsState()
 
     val safeHelmetRegex = Regex("^SafeHelmet-.*")
 
@@ -198,7 +201,11 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
             currentScreen = Screen.NON_CONNECTED
             // Usare MainScope per assicurarsi che il Toast venga eseguito sul thread principale
             MainScope().launch {
-                Toast.makeText(context, "The device disconnected unexpectedly", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    "The device disconnected unexpectedly",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -227,6 +234,7 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
                 onNavigateToSettings = {
                     currentScreen = Screen.SETTINGS
                 }, // Callback per navigare a Settings
+                isBluetoothEnabled = isBluetoothEnabled
             )
 
             Screen.SETTINGS -> SettingsScreen(
@@ -243,6 +251,7 @@ fun NonConnectedScreen(
     onConnectButtonClick: (String) -> Unit,
     onStartScanning: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    isBluetoothEnabled: Boolean
 ) {
     Column(modifier = Modifier.padding(16.dp)) {
         Button(
@@ -252,9 +261,14 @@ fun NonConnectedScreen(
 
         Button(
             onClick = {
-                bleManager.startScanning()
-                onStartScanning()
+                if (isBluetoothEnabled) {
+                    bleManager.startScanning()
+                    onStartScanning()
+                } else {
+                    Log.e("BluetoothManager", "Cannot start scanning: Bluetooth is OFF.")
+                }
             },
+            enabled = isBluetoothEnabled,
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
         ) { Text("Start Scanning", fontSize = 18.sp) }
 
