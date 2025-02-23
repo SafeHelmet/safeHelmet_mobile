@@ -348,10 +348,10 @@ class BleManager(private val context: Context) {
     }
 
     fun adviseForAnomaly() {
-        writeCharacteristic(uuidFrom16Bit(0x0053), "1")
+        writeCharacteristic(0x0046, "1")
     }
 
-    fun writeCharacteristic(characteristicUUID: UUID, value: String) {
+    fun writeCharacteristic(characteristicUUID: Int, value: String) {
         if (gatt == null) {
             Log.e(
                 "BluetoothManager",
@@ -369,10 +369,12 @@ class BleManager(private val context: Context) {
             return
         }
 
-        // Find the desired characteristic
-        val gattService = gatt!!.services.find { service ->
-            service.characteristics.any { it.uuid == characteristicUUID }
-        }
+        val gattService =
+            gatt!!.services[2].characteristics.find { characteristic ->
+                characteristic.descriptors.any { descriptor ->
+                    descriptor.uuid == uuidFrom16Bit(characteristicUUID)
+                }
+            }
 
         if (gattService == null) {
             Log.e(
@@ -382,17 +384,9 @@ class BleManager(private val context: Context) {
             return
         }
 
-        val characteristic =
-            gattService.characteristics.find { it.uuid == characteristicUUID }
-
-        if (characteristic == null) {
-            Log.e("BluetoothManager", "Characteristic with UUID $characteristicUUID not found.")
-            return
-        }
-
         // Write the value on the characteristic
         val response = gatt!!.writeCharacteristic(
-            characteristic,
+            gattService,
             value.toByteArray(),
             BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
         )
