@@ -52,13 +52,13 @@ class PollingScheduler(private val bleManager: BleManager) {
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
-                delay(5000) // ⏳ Attendi 5 secondi prima di ripetere
+                delay(1000 * 30) // Attendi 30 secondi prima di ripetere
             }
         }
     }
 
     fun stopPolling() {
-        pollingJob?.cancel() // 🛑 Ferma il polling
+        pollingJob?.cancel() // Ferma il polling
         pollingJob = null
     }
 }
