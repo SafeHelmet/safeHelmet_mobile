@@ -23,6 +23,7 @@ import android.os.Looper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.UUID
 
 data class BleDevice(
     val name: String?,
@@ -308,7 +309,7 @@ class BleManager(private val context: Context) {
     }
 
 
-    fun readCharacteristic(characteristicUUID: String) {
+    fun readCharacteristic(characteristicUUID: UUID) {
         if (gatt == null) {
             Log.e("BluetoothManager", "No active connection to read the characteristic.")
             return
@@ -316,7 +317,7 @@ class BleManager(private val context: Context) {
 
         val characteristic = gatt!!.services
             .flatMap { it.characteristics }
-            .find { it.uuid.toString() == characteristicUUID }
+            .find { it.uuid == characteristicUUID }
 
         if (characteristic == null) {
             Log.e("BluetoothManager", "Characteristic not found: $characteristicUUID")
@@ -347,10 +348,10 @@ class BleManager(private val context: Context) {
     }
 
     fun adviseForAnomaly() {
-        writeCharacteristic("", "1")
+        writeCharacteristic(uuidFrom16Bit(0x0053), "1")
     }
 
-    fun writeCharacteristic(characteristicUUID: String, value: String) {
+    fun writeCharacteristic(characteristicUUID: UUID, value: String) {
         if (gatt == null) {
             Log.e(
                 "BluetoothManager",
@@ -370,7 +371,7 @@ class BleManager(private val context: Context) {
 
         // Find the desired characteristic
         val gattService = gatt!!.services.find { service ->
-            service.characteristics.any { it.uuid.toString() == characteristicUUID }
+            service.characteristics.any { it.uuid == characteristicUUID }
         }
 
         if (gattService == null) {
@@ -382,7 +383,7 @@ class BleManager(private val context: Context) {
         }
 
         val characteristic =
-            gattService.characteristics.find { it.uuid.toString() == characteristicUUID }
+            gattService.characteristics.find { it.uuid == characteristicUUID }
 
         if (characteristic == null) {
             Log.e("BluetoothManager", "Characteristic with UUID $characteristicUUID not found.")
