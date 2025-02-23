@@ -9,7 +9,6 @@ import com.safehelmet.safehelmet_mobile.ui.theme.Purple40
 import login
 import LoginScreen
 
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -57,7 +56,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import androidx.work.*
 import com.safehelmet.safehelmet_mobile.polling.PollingScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,7 +67,7 @@ import org.json.JSONObject
 class MainActivity : ComponentActivity() {
     var isLogin = mutableStateOf(false)
     private lateinit var bleManager: BleManager
-    private lateinit var pollingManager: PollingScheduler
+    private lateinit var pollingScheduler: PollingScheduler
 
 
 
@@ -104,8 +102,7 @@ class MainActivity : ComponentActivity() {
 
         // Registra il BluetoothReceiver per ricevere i cambiamenti dello stato del Bluetooth
         bleManager.registerReceiver()
-        pollingManager = PollingScheduler(bleManager)
-        pollingManager.startPolling()
+        pollingScheduler = PollingScheduler(bleManager)
 
         setContent {
             var firstTimeInSettings by remember { mutableStateOf(true) } // Controlla se è il primo accesso ai Settings
@@ -134,7 +131,7 @@ class MainActivity : ComponentActivity() {
                 )
             } else {
                 //scheduleApiWorker(this)
-                BluetoothScreenWrapper(bleManager)
+                BluetoothScreenWrapper(bleManager, pollingScheduler)
             }
         }
     }
@@ -156,7 +153,7 @@ enum class Screen {
 }
 
 @Composable
-fun BluetoothScreenWrapper(bleManager: BleManager) {
+fun BluetoothScreenWrapper(bleManager: BleManager, pollingScheduler: PollingScheduler) {
     var connectionState by remember { mutableStateOf(ConnectionState.NON_CONNECTED) }
     var connectedDeviceName by remember { mutableStateOf<String?>(null) }
     var currentScreen by remember { mutableStateOf(Screen.NON_CONNECTED) } // Stato per la navigazione
@@ -197,6 +194,7 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
     if (connectionState == ConnectionState.CONNECTED) {
         ConnectedScreen(
             bleManager = bleManager,
+            pollingScheduler = pollingScheduler,
             connectedDeviceName = connectedDeviceName,
             onDisconnectButtonClick = {
                 connectionState = ConnectionState.NON_CONNECTED
@@ -209,6 +207,7 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
             Screen.NON_CONNECTED -> NonConnectedScreen(
                 devices = devices,
                 bleManager = bleManager,
+                pollingScheduler = pollingScheduler,
                 onConnectButtonClick = { deviceName ->
                     connectedDeviceName = deviceName
                     connectionState = ConnectionState.CONNECTED
@@ -231,6 +230,7 @@ fun BluetoothScreenWrapper(bleManager: BleManager) {
 fun NonConnectedScreen(
     devices: List<BleDevice>,
     bleManager: BleManager,
+    pollingScheduler: PollingScheduler,
     onConnectButtonClick: (String) -> Unit,
     onStartScanning: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -297,6 +297,7 @@ fun NonConnectedScreen(
                             }
 
                             BackendValues.helmetID?.let { Log.i("BackendValues.helmetID", it) }
+                            pollingScheduler.startPolling()
                         }
                     }
                 )
@@ -384,6 +385,7 @@ fun SettingsScreen(
 @Composable
 fun ConnectedScreen(
     bleManager: BleManager,
+    pollingScheduler: PollingScheduler,
     connectedDeviceName: String?, // Riceve il nome del dispositivo
     onDisconnectButtonClick: () -> Unit
 ) {
@@ -463,6 +465,7 @@ fun ConnectedScreen(
                 onClick = {
                     onDisconnectButtonClick()
                     bleManager.disconnectFromPeripheral()
+                    pollingScheduler.stopPolling()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
