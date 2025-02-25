@@ -1,10 +1,8 @@
 package com.safehelmet.safehelmet_mobile.notification
 
-import android.content.pm.PackageManager
-
 /// TODO: Reference https://developer.android.com/develop/ui/views/notifications/build-notification
 
-
+import android.content.pm.PackageManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -12,9 +10,9 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import com.safehelmet.safehelmet_mobile.MainActivity
 import android.Manifest
+import com.safehelmet.safehelmet_mobile.R
 
 object PollingNotification {
 
@@ -49,7 +47,7 @@ object PollingNotification {
 
         // Costruzione della notifica
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setSmallIcon(R.drawable.notification_icon)
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -61,6 +59,8 @@ object PollingNotification {
 //        with(NotificationManagerCompat.from(context)) {
 //            notify(1, builder.build())
 //        }
-        notificationManager.notify(1, builder)
+
+        // TODO: Magari impostare come ID della notifica quello della reading??
+        notificationManager.notify(System.currentTimeMillis().toInt(), builder)
     }
 }
