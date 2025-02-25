@@ -8,7 +8,10 @@ import com.safehelmet.safehelmet_mobile.parse.ParseCollector
 import com.safehelmet.safehelmet_mobile.ui.theme.Purple40
 import login
 import LoginScreen
-
+import android.content.Context
+import android.content.pm.PackageManager
+import android.Manifest
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -54,6 +57,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import com.safehelmet.safehelmet_mobile.polling.PollingScheduler
@@ -68,8 +72,6 @@ class MainActivity : ComponentActivity() {
     var isLogin = mutableStateOf(false)
     private lateinit var bleManager: BleManager
     private lateinit var pollingScheduler: PollingScheduler
-
-
 
     private val enableBluetoothLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -91,9 +93,20 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+    // Launcher per richiedere il permesso delle notifiche
+    private val requestNotificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                Log.i("Notifications", "Permesso notifiche concesso")
+            } else {
+                Log.e("Notifications", "Permesso notifiche negato")
+            }
+        }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        // val isFromNotification = intent.getBooleanExtra("from_notification", false)
         bleManager = BleManager(this)
 
         // Initialize the launcher in the BluetoothManager class
@@ -102,8 +115,7 @@ class MainActivity : ComponentActivity() {
 
         // Registra il BluetoothReceiver per ricevere i cambiamenti dello stato del Bluetooth
         bleManager.registerReceiver()
-        pollingScheduler = PollingScheduler(bleManager)
-
+        pollingScheduler = PollingScheduler(bleManager, this)
         setContent {
             var firstTimeInSettings by remember { mutableStateOf(true) } // Controlla se è il primo accesso ai Settings
 
@@ -134,12 +146,32 @@ class MainActivity : ComponentActivity() {
                 BluetoothScreenWrapper(bleManager, pollingScheduler)
             }
         }
+        // Richiedi il permesso per le notifiche all'avvio
+        requestNotificationPermission()
+        val originalIntent = intent
+        Log.d("MainActivity", "onCreate chiamato con Intent: $originalIntent")
     }
 
     override fun onDestroy() {
         super.onDestroy()
         // Deregistra il BluetoothReceiver per evitare memory leaks
         bleManager.unregisterReceiver()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Log.d("MainActivity", "onStart called")
+    }
+    override fun onResume() {
+        super.onResume()
+        Log.d("MainActivity", "onResume called")
+    }
+
+    private fun requestNotificationPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED) {
+            requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
     }
 }
 
@@ -180,13 +212,13 @@ fun BluetoothScreenWrapper(bleManager: BleManager, pollingScheduler: PollingSche
             connectedDeviceName = null
             currentScreen = Screen.NON_CONNECTED
             // Usare MainScope per assicurarsi che il Toast venga eseguito sul thread principale
-            MainScope().launch {
-                Toast.makeText(
-                    context,
-                    "The device disconnected unexpectedly",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+//            MainScope().launch {
+//                Toast.makeText(
+//                    context,
+//                    "The device disconnected unexpectedly",
+//                    Toast.LENGTH_SHORT
+//                ).show()
+//            }
         }
     }
 
@@ -216,7 +248,8 @@ fun BluetoothScreenWrapper(bleManager: BleManager, pollingScheduler: PollingSche
                 onNavigateToSettings = {
                     currentScreen = Screen.SETTINGS
                 }, // Callback per navigare a Settings
-                isBluetoothEnabled = isBluetoothEnabled
+                isBluetoothEnabled = isBluetoothEnabled,
+                context = context
             )
 
             Screen.SETTINGS -> SettingsScreen(
@@ -234,7 +267,8 @@ fun NonConnectedScreen(
     onConnectButtonClick: (String) -> Unit,
     onStartScanning: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    isBluetoothEnabled: Boolean
+    isBluetoothEnabled: Boolean,
+    context: Context
 ) {
     Column(modifier = Modifier.padding(16.dp)) {
         Button(
