@@ -30,7 +30,7 @@ object PollingNotification {
             "Helmet Alerts",
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
-            description = "Notifiche per anomalie del casco"
+            description = "Anomaly notification"
         }
         val notificationManager: NotificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

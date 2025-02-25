@@ -38,15 +38,6 @@ class PollingScheduler(private val bleManager: BleManager, private val context: 
         bleManager.adviseForAnomaly()
     }
 
-    private fun pushNotification(context: Context) {
-        /// TODO
-        PollingNotification.showNotification(
-            context,
-            "Attenzione!",
-            "È stata rilevata un'anomalia nel casco."
-        )
-    }
-
     fun startPolling() {
         if (pollingJob?.isActive == true) return // Evita doppio avvio
 
@@ -55,7 +46,11 @@ class PollingScheduler(private val bleManager: BleManager, private val context: 
                 try {
                     if (isReadingAnomaly()) {
                         adviseBLEHelmet()
-                        pushNotification(context)
+                        PollingNotification.showNotification(
+                            context,
+                            "Warning!",
+                            "An anomaly in your worksite has been detected!"
+                        )
                         Log.i("Polling", "Anomaly detected")
                     }else{
                         Log.i("Polling", "No anomaly detected")
