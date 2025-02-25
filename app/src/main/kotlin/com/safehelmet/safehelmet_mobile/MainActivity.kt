@@ -112,7 +112,7 @@ class MainActivity : ComponentActivity() {
                     lifecycleScope.launch {
                         val loginSuccessful = login(username, password)
 
-                        if (loginSuccessful) {
+                        if (loginSuccessful || BackendValues.workerID != null) {
                             isLogin.value = true
                         } else {
                             Toast.makeText(
