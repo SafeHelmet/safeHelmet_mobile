@@ -39,7 +39,6 @@ object PollingNotification {
         // Intent per aprire l'app al tocco della notifica
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            // putExtra("from_notification", true)
         }
         val pendingIntent = PendingIntent.getActivity(
             context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -54,11 +53,6 @@ object PollingNotification {
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
-
-        // Mostra la notifica
-//        with(NotificationManagerCompat.from(context)) {
-//            notify(1, builder.build())
-//        }
 
         // TODO: Magari impostare come ID della notifica quello della reading??
         notificationManager.notify(System.currentTimeMillis().toInt(), builder)

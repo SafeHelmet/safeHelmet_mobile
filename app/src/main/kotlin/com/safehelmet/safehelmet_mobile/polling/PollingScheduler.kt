@@ -59,7 +59,7 @@ class PollingScheduler(private val bleManager: BleManager, private val context: 
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
-                delay(1000 * 30) // Attendi 30 secondi prima di ripetere
+                delay(1000 * 90) // Attendi 90 secondi prima di ripetere
             }
         }
     }

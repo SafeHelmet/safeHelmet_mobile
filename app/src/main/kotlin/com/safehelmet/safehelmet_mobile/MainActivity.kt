@@ -1,6 +1,5 @@
 package com.safehelmet.safehelmet_mobile
 
-//import com.safehelmet.safehelmet_mobile.polling.PollingScheduler
 import com.safehelmet.safehelmet_mobile.api.HttpClient
 import com.safehelmet.safehelmet_mobile.ble.BleDevice
 import com.safehelmet.safehelmet_mobile.ble.BleManager
@@ -8,10 +7,8 @@ import com.safehelmet.safehelmet_mobile.parse.ParseCollector
 import com.safehelmet.safehelmet_mobile.ui.theme.Purple40
 import login
 import LoginScreen
-import android.content.Context
 import android.content.pm.PackageManager
 import android.Manifest
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -53,7 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+// import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,7 +60,7 @@ import kotlinx.coroutines.launch
 import com.safehelmet.safehelmet_mobile.polling.PollingScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
+// import kotlinx.coroutines.MainScope
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -106,7 +103,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // val isFromNotification = intent.getBooleanExtra("from_notification", false)
         bleManager = BleManager(this)
 
         // Initialize the launcher in the BluetoothManager class
@@ -148,23 +144,12 @@ class MainActivity : ComponentActivity() {
         }
         // Richiedi il permesso per le notifiche all'avvio
         requestNotificationPermission()
-        val originalIntent = intent
-        Log.d("MainActivity", "onCreate chiamato con Intent: $originalIntent")
     }
 
     override fun onDestroy() {
         super.onDestroy()
         // Deregistra il BluetoothReceiver per evitare memory leaks
         bleManager.unregisterReceiver()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        Log.d("MainActivity", "onStart called")
-    }
-    override fun onResume() {
-        super.onResume()
-        Log.d("MainActivity", "onResume called")
     }
 
     private fun requestNotificationPermission() {
@@ -203,7 +188,7 @@ fun BluetoothScreenWrapper(bleManager: BleManager, pollingScheduler: PollingSche
     }
 
     val onStartScanning = { devices.clear() }
-    val context = LocalContext.current
+    // val context = LocalContext.current
 
     // Imposta la callback per la disconnessione
     LaunchedEffect(Unit) {
@@ -248,8 +233,7 @@ fun BluetoothScreenWrapper(bleManager: BleManager, pollingScheduler: PollingSche
                 onNavigateToSettings = {
                     currentScreen = Screen.SETTINGS
                 }, // Callback per navigare a Settings
-                isBluetoothEnabled = isBluetoothEnabled,
-                context = context
+                isBluetoothEnabled = isBluetoothEnabled
             )
 
             Screen.SETTINGS -> SettingsScreen(
@@ -268,7 +252,6 @@ fun NonConnectedScreen(
     onStartScanning: () -> Unit,
     onNavigateToSettings: () -> Unit,
     isBluetoothEnabled: Boolean,
-    context: Context
 ) {
     Column(modifier = Modifier.padding(16.dp)) {
         Button(
