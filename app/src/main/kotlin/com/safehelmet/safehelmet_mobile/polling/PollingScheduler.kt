@@ -13,6 +13,8 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import com.safehelmet.safehelmet_mobile.BackendValues
 import com.safehelmet.safehelmet_mobile.notification.PollingNotification
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 class PollingScheduler(private val bleManager: BleManager, private val context: Context) {
     private var pollingJob: Job? = null
@@ -42,6 +44,11 @@ class PollingScheduler(private val bleManager: BleManager, private val context: 
 
         pollingJob = scope.launch {
             while (isActive) { // Controlla se il polling è attivo
+                val notificationDelay = (1000 * 90).toLong() // 90 secondi
+                val currentTime = LocalTime.now()
+                val formattedTime = currentTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                val lastTime = currentTime.minusSeconds(notificationDelay/1000).format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+
                 try {
                     val anomalyNums = getAnomalyNums()
                     if (anomalyNums > 0) {
@@ -49,7 +56,7 @@ class PollingScheduler(private val bleManager: BleManager, private val context: 
                         PollingNotification.showNotification(
                             context,
                             "Warning!",
-                            "$anomalyNums anomalies have been detected in your worksite!"
+                            "$anomalyNums anomalies detected in your worksite between $lastTime and $formattedTime!"
                         )
                         Log.i("Polling", "Anomaly detected")
                     }else if (anomalyNums == 0){
@@ -61,7 +68,7 @@ class PollingScheduler(private val bleManager: BleManager, private val context: 
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
-                delay(1000 * 90) // Attendi 90 secondi prima di ripetere
+                delay(notificationDelay) // Attendi 90 secondi prima di ripetere
             }
         }
     }
