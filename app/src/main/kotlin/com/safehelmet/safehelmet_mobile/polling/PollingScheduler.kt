@@ -23,7 +23,7 @@ class PollingScheduler(private val bleManager: BleManager, private val context: 
             val response = HttpClient.getRequestSync("/api/v1/polling/${BackendValues.helmetID}")
             if (response?.isSuccessful == true) {
                 val json = JSONObject(response.body?.string() ?: "{}")
-                json.getInt("anomaly_level") // Assumendo che il campo si chiami "anomaly_level"
+                json.getInt("Anomalies")
             } else {
                 Log.e("Polling", "Errore HTTP: ${response?.code}")
                 -1 // Valore di fallback in caso di errore
