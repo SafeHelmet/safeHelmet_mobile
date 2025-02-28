@@ -18,22 +18,21 @@ class PollingScheduler(private val bleManager: BleManager, private val context: 
     private var pollingJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.IO)
 
-    private fun isReadingAnomaly(): Boolean {
+    private fun getAnomalyNums(): Int {
         return try {
             val response = HttpClient.getRequestSync("/api/v1/polling/${BackendValues.helmetID}")
             if (response?.isSuccessful == true) {
                 val json = JSONObject(response.body?.string() ?: "{}")
-                json.getBoolean("anomaly_detected")
+                json.getInt("anomaly_level") // Assumendo che il campo si chiami "anomaly_level"
             } else {
                 Log.e("Polling", "Errore HTTP: ${response?.code}")
-                false
+                -1 // Valore di fallback in caso di errore
             }
         } catch (e: Exception) {
             Log.e("Polling", "Errore durante la richiesta HTTP", e)
-            false
+            -1 // Valore di fallback in caso di eccezione
         }
     }
-
     private fun adviseBLEHelmet() {
         bleManager.adviseForAnomaly()
     }
@@ -44,16 +43,19 @@ class PollingScheduler(private val bleManager: BleManager, private val context: 
         pollingJob = scope.launch {
             while (isActive) { // Controlla se il polling è attivo
                 try {
-                    if (isReadingAnomaly()) {
+                    val anomalyNums = getAnomalyNums()
+                    if (anomalyNums > 0) {
                         adviseBLEHelmet()
                         PollingNotification.showNotification(
                             context,
                             "Warning!",
-                            "An anomaly in your worksite has been detected!"
+                            "$anomalyNums anomalies have been detected in your worksite!"
                         )
                         Log.i("Polling", "Anomaly detected")
-                    }else{
+                    }else if (anomalyNums == 0){
                         Log.i("Polling", "No anomaly detected")
+                    } else {
+                        Log.i("Polling", "Error getting anomaly numbers")
                     }
                     Log.i("Polling", "Waiting for next polling...")
                 } catch (e: Exception) {
