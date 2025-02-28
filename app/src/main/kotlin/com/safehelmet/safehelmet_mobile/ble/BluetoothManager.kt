@@ -25,7 +25,6 @@ import com.safehelmet.safehelmet_mobile.api.HttpClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.json.JSONObject
 import java.util.UUID
 
 data class BleDevice(
@@ -299,19 +298,8 @@ class BleManager(private val context: Context) {
             Log.e("BluetoothManager", "No active connection found for the device.")
         }
 
-        // Esegui la PUT request per aggiornare attendance
-        val json = JSONObject()
-        json.put("worker_id", BackendValues.workerID?.toIntOrNull() ?: 0)
-        json.put("worksite_id", BackendValues.worksiteID?.toIntOrNull() ?: 0)
-        json.put("helmet_id", BackendValues.helmetID?.toIntOrNull() ?: 0)
-
-
         // Esegui la richiesta HTTP in modo asincrono
-        HttpClient.putRequest(
-            "/api/v1/workers/attendance", json.toString()
-        ) { response ->
-            Log.i("Ending attendance", "Ended attendance successfully: ${response?.isSuccessful}")
-        }
+        HttpClient.getRequestSync("/api/v1/workers/attendance/${BackendValues.attendanceID}")
 
     }
 

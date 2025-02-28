@@ -93,32 +93,4 @@ object HttpClient {
             }
         })
     }
-
-    fun putRequest(url: String, json: String, callback: (Response?) -> Unit) {
-        val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
-
-
-        val request = Request.Builder()
-            .url(BASE_URL+url)
-            .put(body)
-            .addHeader("Authorization", AUTH_TOKEN) // Aggiungi il token di autorizzazione
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-                callback(null)
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                if (response.isSuccessful) {
-                    callback(response)
-                } else {
-                    Log.e("API_ERROR", "Response failed with status code: ${response.code}")
-                    Log.e("API_ERROR", "Error body: ${response.body?.string() ?: "No error body"}")
-                    callback(null)
-                }
-            }
-        })
-    }
 }
