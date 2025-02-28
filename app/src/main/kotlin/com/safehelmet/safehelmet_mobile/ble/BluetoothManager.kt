@@ -301,9 +301,10 @@ class BleManager(private val context: Context) {
 
         // Esegui la PUT request per aggiornare attendance
         val json = JSONObject()
-        json.put("worker_id", BackendValues.workerID)
-        json.put("worksite_id", BackendValues.worksiteID)
-        json.put("helmet_id", BackendValues.helmetID)
+        json.put("worker_id", BackendValues.workerID?.toIntOrNull() ?: 0)
+        json.put("worksite_id", BackendValues.worksiteID?.toIntOrNull() ?: 0)
+        json.put("helmet_id", BackendValues.helmetID?.toIntOrNull() ?: 0)
+
 
         // Esegui la richiesta HTTP in modo asincrono
         HttpClient.putRequest(
