@@ -50,6 +50,7 @@ object PollingNotification {
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message)) // Abilita il testo espandibile
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
