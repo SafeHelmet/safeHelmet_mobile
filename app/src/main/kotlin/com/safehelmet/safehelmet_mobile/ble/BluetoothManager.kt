@@ -22,9 +22,12 @@ import android.os.Handler
 import android.os.Looper
 import com.safehelmet.safehelmet_mobile.BackendValues
 import com.safehelmet.safehelmet_mobile.api.HttpClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 data class BleDevice(
@@ -299,7 +302,16 @@ class BleManager(private val context: Context) {
         }
 
         // Esegui la richiesta HTTP in modo asincrono
-        HttpClient.getRequestSync("/api/v1/workers/attendance/${BackendValues.attendanceID}")
+        // HttpClient.getRequestSync("/api/v1/workers/attendance/${BackendValues.attendanceID}")
+        // Fire-and-forget API call (runs in the background)
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                HttpClient.getRequestSync("/api/v1/workers/attendance/${BackendValues.attendanceID}")
+                Log.i("HttpClient", "API request sent successfully.")
+            } catch (e: Exception) {
+                Log.e("HttpClient", "Network request failed", e)
+            }
+        }
 
     }
 
