@@ -44,7 +44,7 @@ object PollingNotification {
             context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Costruzione della notifica
+        // Configura la notifica con BigTextStyle per supportare il testo lungo
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.notification_icon)
             .setContentTitle(title)
@@ -52,10 +52,12 @@ object PollingNotification {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message)) // Abilita il testo espandibile
             .setContentIntent(pendingIntent)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message)) // Abilita il testo espandibile
             .setAutoCancel(true)
             .build()
 
-        // TODO: Magari impostare come ID della notifica quello della reading??
+        // Mostra la notifica
         notificationManager.notify(System.currentTimeMillis().toInt(), builder)
     }
+
 }

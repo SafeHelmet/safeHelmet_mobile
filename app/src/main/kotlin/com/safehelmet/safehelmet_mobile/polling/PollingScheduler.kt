@@ -45,6 +45,8 @@ class PollingScheduler(private val bleManager: BleManager, private val context: 
         pollingJob = scope.launch {
             while (isActive) { // Controlla se il polling è attivo
                 val notificationDelay = (1000 * 90).toLong() // 90 secondi
+                delay(notificationDelay) // Attendi 90 secondi prima di ripetere
+
                 val currentTime = LocalTime.now()
                 val formattedTime = currentTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
                 val lastTime = currentTime.minusSeconds(notificationDelay/1000).format(DateTimeFormatter.ofPattern("HH:mm:ss"))
@@ -68,7 +70,7 @@ class PollingScheduler(private val bleManager: BleManager, private val context: 
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
-                delay(notificationDelay) // Attendi 90 secondi prima di ripetere
+
             }
         }
     }
